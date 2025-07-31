@@ -1,0 +1,31 @@
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Poste</th>
+            <th>Salaire</th>
+            <th>Date Embauche</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for emp in employees %}
+        <tr>
+            <td>{{ emp.first_name }} {{ emp.last_name }}</td>
+            <td>{{ emp.email }}</td>
+            <td>{{ emp.position }}</td>
+            <td>{{ emp.salary }} MAD</td>
+            <td>{{ emp.hire_date }}</td>
+            <td>
+                <button class="btn btn-warning btn-sm js-update-employee" data-url="{% url 'employee_update' emp.id %}">✏</button>
+                <button class="btn btn-danger btn-sm js-delete-employee" data-url="{% url 'employee_delete' emp.id %}">🗑</button>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="6" class="text-center">Aucun employé trouvé</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
