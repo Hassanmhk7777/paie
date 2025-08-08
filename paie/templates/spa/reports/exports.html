@@ -1,0 +1,141 @@
+
+{% extends "base_spa.html" %}
+
+{% block title %}Exports - PaiePro{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fas fa-download me-2"></i>Exports et Téléchargements</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="export-card">
+                        <h6><i class="fas fa-file-excel text-success"></i> Bulletins de Paie</h6>
+                        <p>Export Excel des bulletins par période</p>
+                        <div class="mb-2">
+                            <select class="form-select form-select-sm">
+                                <option>Août 2025</option>
+                                <option>Juillet 2025</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success btn-sm">
+                            <i class="fas fa-download"></i> Exporter
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="export-card">
+                        <h6><i class="fas fa-file-pdf text-danger"></i> Feuille de Présence</h6>
+                        <p>PDF des présences par période</p>
+                        <div class="mb-2">
+                            <input type="date" class="form-control form-control-sm">
+                        </div>
+                        <button class="btn btn-danger btn-sm">
+                            <i class="fas fa-download"></i> Exporter
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="export-card">
+                        <h6><i class="fas fa-file-csv text-primary"></i> Liste Employés</h6>
+                        <p>Export CSV de la base employés</p>
+                        <div class="mb-2">
+                            <select class="form-select form-select-sm">
+                                <option>Tous les employés</option>
+                                <option>Actifs seulement</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary btn-sm">
+                            <i class="fas fa-download"></i> Exporter
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6>Historique des Exports</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Période</th>
+                                    <th>Taille</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="export-history">
+                                <tr><td colspan="5" class="text-center">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    cleanupSPAPage('reports-exports');
+    
+    if (!isSPAPageInitialized('reports-exports')) {
+        initExports();
+        markSPAPageInitialized('reports-exports');
+    }
+});
+
+function initExports() {
+    console.log('Initialisation exports');
+    loadExportHistory();
+}
+
+function loadExportHistory() {
+    const rows = `
+        <tr>
+            <td>08/08/2025 14:30</td>
+            <td><i class="fas fa-file-excel text-success"></i> Bulletins Excel</td>
+            <td>Juillet 2025</td>
+            <td>2.3 MB</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download"></i>
+                </button>
+            </td>
+        </tr>
+        <tr>
+            <td>07/08/2025 09:15</td>
+            <td><i class="fas fa-file-pdf text-danger"></i> Présence PDF</td>
+            <td>01-07/08/2025</td>
+            <td>1.1 MB</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+    
+    $('#export-history').html(rows);
+}
+</script>
+
+<style>
+.export-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-top: 3px solid #007bff;
+}
+</style>
+
+{% endblock %}

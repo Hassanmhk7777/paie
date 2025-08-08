@@ -1,0 +1,110 @@
+
+{% extends "base_spa.html" %}
+
+{% block title %}Paramètres Congés - PaiePro{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fas fa-cog me-2"></i>Paramètres des Congés</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Types de Congés</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Jours/An</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leave-types-table">
+                                <tr><td colspan="3" class="text-center">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button class="btn btn-primary btn-sm mt-2">Ajouter Type</button>
+                </div>
+                <div class="col-md-6">
+                    <h6>Règles de Validation</h6>
+                    <form id="leave-rules-form">
+                        <div class="mb-3">
+                            <label class="form-label">Préavis minimum (jours)</label>
+                            <input type="number" class="form-control" value="7">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Durée max par demande (jours)</label>
+                            <input type="number" class="form-control" value="30">
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="auto-approve">
+                            <label class="form-check-label" for="auto-approve">
+                                Approbation automatique < 3 jours
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-success">Sauvegarder</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    cleanupSPAPage('leave-settings');
+    
+    if (!isSPAPageInitialized('leave-settings')) {
+        initLeaveSettings();
+        markSPAPageInitialized('leave-settings');
+    }
+});
+
+function initLeaveSettings() {
+    console.log('Initialisation paramètres congés');
+    loadLeaveTypes();
+    
+    $('#leave-rules-form').on('submit', function(e) {
+        e.preventDefault();
+        alert('Règles sauvegardées!');
+    });
+}
+
+function loadLeaveTypes() {
+    const rows = `
+        <tr>
+            <td><span class="badge" style="background-color: #28a745;">Congés Payés</span></td>
+            <td>22</td>
+            <td>
+                <button class="btn btn-sm btn-warning">Modifier</button>
+                <button class="btn btn-sm btn-danger">Supprimer</button>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="badge" style="background-color: #dc3545;">Maladie</span></td>
+            <td>Illimité</td>
+            <td>
+                <button class="btn btn-sm btn-warning">Modifier</button>
+                <button class="btn btn-sm btn-danger">Supprimer</button>
+            </td>
+        </tr>
+        <tr>
+            <td><span class="badge" style="background-color: #ffc107;">Formation</span></td>
+            <td>10</td>
+            <td>
+                <button class="btn btn-sm btn-warning">Modifier</button>
+                <button class="btn btn-sm btn-danger">Supprimer</button>
+            </td>
+        </tr>
+    `;
+    
+    $('#leave-types-table').html(rows);
+}
+</script>
+
+{% endblock %}

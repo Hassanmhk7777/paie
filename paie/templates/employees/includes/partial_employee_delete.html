@@ -1,6 +1,0 @@
-<form method="post" class="js-employee-form">
-    {% csrf_token %}
-    <p>Voulez-vous vraiment supprimer l'employé <strong>{{ employee.first_name }} {{ employee.last_name }}</strong> ?</p>
-    <button type="submit" class="btn btn-danger">Supprimer</button>
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-</form>

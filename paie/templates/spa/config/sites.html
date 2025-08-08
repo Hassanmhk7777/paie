@@ -1,0 +1,334 @@
+<!-- Config Header -->
+<div class="config-header p-4 border-bottom">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="h3 mb-1">
+                <i class="fas fa-building text-primary me-2"></i>
+                Gestion Sites & Départements
+            </h1>
+            <p class="text-muted mb-0">
+                Configurez la structure organisationnelle de votre entreprise
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/admin/" target="_blank" class="btn btn-primary">
+                <i class="fas fa-cog me-1"></i> Administration Django
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Config Content -->
+<div class="config-content p-4">
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card quick-action-card quick-action-primary">
+                <div class="card-body text-center">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h5 class="card-title">Ajouter un Site</h5>
+                    <p class="card-text">Créez un nouveau site ou bureau pour votre organisation</p>
+                    <a href="/admin/paie/site/add/" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Nouveau Site
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card quick-action-card quick-action-success">
+                <div class="card-body text-center">
+                    <div class="quick-action-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h5 class="card-title">Ajouter un Département</h5>
+                    <p class="card-text">Organisez vos équipes en départements fonctionnels</p>
+                    <a href="/admin/paie/department/add/" target="_blank" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i> Nouveau Département
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sites Management -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-building text-primary me-2"></i>
+                        Sites Existants
+                    </h5>
+                    <a href="/admin/paie/site/" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i> Gérer dans Admin
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if sites %}
+                    <div class="row">
+                        {% for site in sites %}
+                        <div class="col-md-6 col-xl-4 mb-3">
+                            <div class="entity-card">
+                                <div class="entity-header">
+                                    <div class="entity-icon entity-icon-primary">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <div class="entity-info">
+                                        <div class="entity-name">{{ site.name }}</div>
+                                        <div class="entity-details">
+                                            {% if site.city %}
+                                                <i class="fas fa-map-marker-alt me-1"></i>{{ site.city }}
+                                            {% endif %}
+                                        </div>
+                                        <div class="entity-meta">
+                                            <span class="badge bg-primary">{{ site.employee_count }} employé{{ site.employee_count|pluralize }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="entity-actions">
+                                    <a href="/admin/paie/site/{{ site.id }}/change/" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aucun site configuré</h5>
+                        <p class="text-muted">Commencez par ajouter votre premier site d'entreprise</p>
+                        <a href="/admin/paie/site/add/" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Ajouter le Premier Site
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Departments Management -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-layer-group text-success me-2"></i>
+                        Départements Existants
+                    </h5>
+                    <a href="/admin/paie/department/" target="_blank" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-external-link-alt me-1"></i> Gérer dans Admin
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if departments %}
+                    <div class="row">
+                        {% for dept in departments %}
+                        <div class="col-md-6 col-xl-4 mb-3">
+                            <div class="entity-card">
+                                <div class="entity-header">
+                                    <div class="entity-icon entity-icon-success">
+                                        <i class="fas fa-users"></i>
+                                    </div>
+                                    <div class="entity-info">
+                                        <div class="entity-name">{{ dept.name }}</div>
+                                        <div class="entity-details">
+                                            {% if dept.description %}
+                                                {{ dept.description|truncatechars:60 }}
+                                            {% else %}
+                                                <span class="text-muted">Pas de description</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="entity-meta">
+                                            <span class="badge bg-success">{{ dept.employee_count }} employé{{ dept.employee_count|pluralize }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="entity-actions">
+                                    <a href="/admin/paie/department/{{ dept.id }}/change/" target="_blank" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-layer-group fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aucun département configuré</h5>
+                        <p class="text-muted">Organisez votre entreprise en créant des départements</p>
+                        <a href="/admin/paie/department/add/" target="_blank" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i> Ajouter le Premier Département
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        Aide & Instructions
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Sites</h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-check text-success me-1"></i> Représentent vos bureaux, succursales ou emplacements physiques</li>
+                                <li><i class="fas fa-check text-success me-1"></i> Chaque employé est assigné à un site</li>
+                                <li><i class="fas fa-check text-success me-1"></i> Utile pour la gestion multi-sites</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-success">Départements</h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-check text-success me-1"></i> Organisent vos employés par fonction (RH, IT, Finance...)</li>
+                                <li><i class="fas fa-check text-success me-1"></i> Facilitent la gestion et les rapports</li>
+                                <li><i class="fas fa-check text-success me-1"></i> Peuvent être transversaux aux sites</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Conseil :</strong> L'administration Django vous donne un contrôle complet sur la création et modification des sites et départements avec des fonctionnalités avancées.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .config-header {
+        background: linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+    }
+
+    .quick-action-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+    .quick-action-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .quick-action-primary { border-left: 5px solid var(--primary-blue); }
+    .quick-action-success { border-left: 5px solid #16a34a; }
+
+    .quick-action-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        margin: 0 auto 1.5rem;
+    }
+
+    .quick-action-primary .quick-action-icon {
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+    }
+
+    .quick-action-success .quick-action-icon {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+    }
+
+    .entity-card {
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .entity-card:hover {
+        border-color: var(--primary-blue);
+        box-shadow: 0 4px 12px rgba(30, 64, 175, 0.1);
+    }
+
+    .entity-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        flex: 1;
+    }
+
+    .entity-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .entity-icon-primary {
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+    }
+
+    .entity-icon-success {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+    }
+
+    .entity-info {
+        flex: 1;
+    }
+
+    .entity-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+    }
+
+    .entity-details {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .entity-meta {
+        margin-bottom: 1rem;
+    }
+
+    .entity-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gray-200);
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+    // Initialize when this section loads
+    window.initSection = function(section) {
+        if (section === 'config-sites') {
+            // Any specific initialization
+        }
+    };
+</script>

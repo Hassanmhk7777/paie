@@ -1,0 +1,138 @@
+
+{% extends "base_spa.html" %}
+
+{% block title %}Dashboard Pointage - PaiePro{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-tachometer-alt me-2"></i>Dashboard Pointage Temps Réel</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <h6>Employés Présents</h6>
+                                <span class="stat-number text-success" id="employes-presents">--</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <h6>En Retard</h6>
+                                <span class="stat-number text-warning" id="employes-retard">--</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card">
+                                <h6>Absents</h6>
+                                <span class="stat-number text-danger" id="employes-absents">--</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-8">
+                            <canvas id="attendanceChart" height="300"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Derniers Pointages</h6>
+                            <div id="recent-clockings" class="list-group">
+                                <div class="text-center text-muted">Chargement...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Nettoyer la page précédente
+    cleanupSPAPage('attendance-dashboard');
+    
+    // Initialiser le dashboard
+    if (!isSPAPageInitialized('attendance-dashboard')) {
+        initAttendanceDashboard();
+        markSPAPageInitialized('attendance-dashboard');
+    }
+});
+
+function initAttendanceDashboard() {
+    console.log('Initialisation du dashboard pointage');
+    
+    // Créer le graphique des présences
+    const ctx = document.getElementById('attendanceChart').getContext('2d');
+    const attendanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'],
+            datasets: [{
+                label: 'Présents',
+                data: [45, 42, 48, 46, 44],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Retards',
+                data: [3, 5, 2, 4, 6],
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    // Enregistrer le graphique
+    registerChart('attendance-dashboard', 'attendanceChart', attendanceChart);
+    
+    // Charger les données
+    loadAttendanceStats();
+}
+
+function loadAttendanceStats() {
+    // Simulation de données
+    $('#employes-presents').text('45');
+    $('#employes-retard').text('3');
+    $('#employes-absents').text('2');
+    
+    // Derniers pointages
+    const recentHTML = `
+        <div class="list-group-item d-flex justify-content-between">
+            <span>John Doe</span>
+            <small class="text-success">08:15</small>
+        </div>
+        <div class="list-group-item d-flex justify-content-between">
+            <span>Jane Smith</span>
+            <small class="text-warning">08:45</small>
+        </div>
+    `;
+    $('#recent-clockings').html(recentHTML);
+}
+</script>
+
+<style>
+.stat-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,751 @@
+<h5 class="card-title mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i>
+                        Actions Rapides
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-primary w-100" onclick="loadContent('employees')">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Nouvel Employé
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-success w-100" onclick="loadContent('payroll-calculation')">
+                                <i class="fas fa-calculator me-2"></i>
+                                Calculer Paie
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-info w-100" onclick="loadContent('leave-approvals')">
+                                <i class="fas fa-check-circle me-2"></i>
+                                Approuver Congés
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-outline-warning w-100" onclick="loadContent('attendance-dashboard')">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Dashboard Temps Réel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-xl-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line text-primary me-2"></i>
+                        Évolution des Effectifs
+                    </h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-secondary active" data-period="month">Mois</button>
+                        <button class="btn btn-outline-secondary" data-period="quarter">Trimestre</button>
+                        <button class="btn btn-outline-secondary" data-period="year">Année</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="employeesChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie text-success me-2"></i>
+                        Répartition par Département
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="departmentChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts and Recent Activity -->
+    <div class="row mb-4">
+        <div class="col-xl-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Alertes & Notifications
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert-list" id="alerts-list">
+                        <div class="alert-item">
+                            <div class="alert-icon bg-warning">
+                                <i class="fas fa-calendar-times"></i>
+                            </div>
+                            <div class="alert-content">
+                                <div class="alert-title">Congés en attente</div>
+                                <div class="alert-description">5 demandes de congés à approuver</div>
+                                <div class="alert-time">Il y a 2 heures</div>
+                            </div>
+                            <div class="alert-action">
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadContent('leave-approvals')">
+                                    Traiter
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="alert-item">
+                            <div class="alert-icon bg-info">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="alert-content">
+                                <div class="alert-title">Retards fréquents</div>
+                                <div class="alert-description">3 employés avec retards répétés cette semaine</div>
+                                <div class="alert-time">Il y a 4 heures</div>
+                            </div>
+                            <div class="alert-action">
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadContent('attendance-reports')">
+                                    Voir
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="alert-item">
+                            <div class="alert-icon bg-success">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="alert-content">
+                                <div class="alert-title">Paie du mois</div>
+                                <div class="alert-description">Calculs de paie prêts pour validation</div>
+                                <div class="alert-time">Il y a 1 jour</div>
+                            </div>
+                            <div class="alert-action">
+                                <button class="btn btn-sm btn-outline-primary" onclick="loadContent('payroll-calculation')">
+                                    Valider
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-plus text-primary me-2"></i>
+                        Employés Récents
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="recent-employees" id="recent-employees">
+                        <!-- Sera rempli dynamiquement -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Morocco Specific Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <span class="morocco-flag"></span>
+                        Spécificités Maroc - Conformité Sociale
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="compliance-item">
+                                <div class="compliance-icon bg-success">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="compliance-title">CNSS</div>
+                                <div class="compliance-status">À jour</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="compliance-item">
+                                <div class="compliance-icon bg-success">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="compliance-title">AMO</div>
+                                <div class="compliance-status">À jour</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="compliance-item">
+                                <div class="compliance-icon bg-warning">
+                                    <i class="fas fa-piggy-bank"></i>
+                                </div>
+                                <div class="compliance-title">CIMR</div>
+                                <div class="compliance-status">En attente</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="compliance-item">
+                                <div class="compliance-icon bg-success">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="compliance-title">IR</div>
+                                <div class="compliance-status">À jour</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS for Dashboard -->
+<style>
+    .kpi-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .kpi-primary { border-left: 4px solid var(--primary-blue); }
+    .kpi-success { border-left: 4px solid #16a34a; }
+    .kpi-warning { border-left: 4px solid #ea580c; }
+    .kpi-info { border-left: 4px solid #0ea5e9; }
+
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        line-height: 1;
+    }
+
+    .kpi-label {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        margin-bottom: 0.25rem;
+    }
+
+    .kpi-change {
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .kpi-change.positive { color: #16a34a; }
+    .kpi-change.negative { color: #dc2626; }
+    .kpi-change.neutral { color: var(--gray-500); }
+
+    .kpi-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .alert-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .alert-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-bottom: 1px solid var(--gray-200);
+        transition: background-color 0.2s ease;
+    }
+
+    .alert-item:hover {
+        background-color: var(--gray-50);
+    }
+
+    .alert-item:last-child {
+        border-bottom: none;
+    }
+
+    .alert-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+    }
+
+    .alert-content {
+        flex: 1;
+    }
+
+    .alert-title {
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 0.25rem;
+    }
+
+    .alert-description {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        margin-bottom: 0.25rem;
+    }
+
+    .alert-time {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+    }
+
+    .recent-employee-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .recent-employee-item:last-child {
+        border-bottom: none;
+    }
+
+    .employee-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-blue), var(--primary-light));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .compliance-item {
+        padding: 1rem;
+    }
+
+    .compliance-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin: 0 auto 0.5rem;
+    }
+
+    .compliance-title {
+        font-weight: 600;
+        color: var(--gray-900);
+        margin-bottom: 0.25rem;
+    }
+
+    .compliance-status {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+
+    .dashboard-header {
+        background: linear-gradient(135deg, rgba(30, 64, 175, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+    }
+</style>
+
+<!-- Dashboard JavaScript -->
+<script>
+    // Variables globales pour les graphiques
+if (typeof window.spaDashboardCharts === 'undefined') {
+    window.spaDashboardCharts = {};
+}
+let employeesChart = window.spaDashboardCharts.employeesChart;
+let departmentChart = window.spaDashboardCharts.departmentChart;
+
+    function initializeDashboard() {
+        // Set current date
+        const now = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        document.getElementById('current-date').textContent = now.toLocaleDateString('fr-FR', options);
+
+        // Load dashboard data
+        loadDashboardData();
+        
+        // Initialize charts
+        initializeCharts();
+        
+        // Load recent employees
+        loadRecentEmployees();
+    }
+
+    function loadDashboardData() {
+        $.ajax({
+            url: '/api/dashboard-stats/',
+            method: 'GET',
+            success: function(data) {
+                // Update KPIs
+                $('#total-employees').text(data.total_employees || 0);
+                $('#employees-change').text(`+${data.employees_change || 0} ce mois`);
+                
+                $('#attendance-rate').text(`${data.attendance_rate || 0}%`);
+                $('#attendance-change').text(`+${data.attendance_change || 0}% cette semaine`);
+                
+                $('#pending-leaves').text(data.pending_leaves || 0);
+                
+                $('#payroll-amount').text(`${(data.payroll_amount || 0).toLocaleString('fr-FR')} MAD`);
+                
+                // Update charts with real data
+                updateCharts(data);
+            },
+            error: function() {
+                // Fallback with demo data
+                loadDemoData();
+            }
+        });
+    }
+
+    function loadDemoData() {
+        // Demo KPIs
+        $('#total-employees').text('156');
+        $('#employees-change').text('+8 ce mois');
+        $('#attendance-rate').text('94%');
+        $('#attendance-change').text('+2% cette semaine');
+        $('#pending-leaves').text('12');
+        $('#payroll-amount').text('2,847,650 MAD');
+        
+        // Demo chart data
+        updateCharts({
+            employees_evolution: [120, 125, 130, 135, 140, 145, 150, 156],
+            departments: {
+                'IT': 45,
+                'RH': 25,
+                'Finance': 30,
+                'Marketing': 35,
+                'Production': 21
+            }
+        });
+    }
+
+    function initializeCharts() {
+        // Employees Evolution Chart
+        const employeesCtx = document.getElementById('employeesChart').getContext('2d');
+        if (window.spaDashboardCharts.employeesChart) {
+            window.spaDashboardCharts.employeesChart.destroy();
+        }
+        employeesChart = window.spaDashboardCharts.employeesChart = new Chart(employeesCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû'],
+                datasets: [{
+                    label: 'Employés',
+                    data: [],
+                    borderColor: 'rgb(30, 64, 175)',
+                    backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Department Distribution Chart
+        const departmentCtx = document.getElementById('departmentChart').getContext('2d');
+        if (window.spaDashboardCharts.departmentChart) {
+            window.spaDashboardCharts.departmentChart.destroy();
+        }
+        departmentChart = window.spaDashboardCharts.departmentChart = new Chart(departmentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [
+                        'rgb(30, 64, 175)',
+                        'rgb(22, 163, 74)',
+                        'rgb(234, 88, 12)',
+                        'rgb(14, 165, 233)',
+                        'rgb(168, 85, 247)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCharts(data) {
+        // Update employees chart
+        if (data.employees_evolution) {
+            employeesChart.data.datasets[0].data = data.employees_evolution;
+            employeesChart.update();
+        }
+
+        // Update departments chart
+        if (data.departments) {
+            departmentChart.data.labels = Object.keys(data.departments);
+            departmentChart.data.datasets[0].data = Object.values(data.departments);
+            departmentChart.update();
+        }
+    }
+
+    function loadRecentEmployees() {
+        $.ajax({
+            url: '/api/recent-employees/',
+            method: 'GET',
+            success: function(data) {
+                let html = '';
+                data.forEach(employee => {
+                    const initials = `${employee.first_name.charAt(0)}${employee.last_name.charAt(0)}`;
+                    html += `
+                        <div class="recent-employee-item">
+                            <div class="employee-avatar">${initials}</div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">${employee.first_name} ${employee.last_name}</div>
+                                <div class="text-muted small">${employee.position}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="small text-muted">${employee.hire_date}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                $('#recent-employees').html(html);
+            },
+            error: function() {
+                // Fallback demo data
+                $('#recent-employees').html(`
+                    <div class="recent-employee-item">
+                        <div class="employee-avatar">AB</div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">Ahmed Benali</div>
+                            <div class="text-muted small">Développeur Senior</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">Il y a 2 jours</div>
+                        </div>
+                    </div>
+                    <div class="recent-employee-item">
+                        <div class="employee-avatar">FK</div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">Fatima Khoury</div>
+                            <div class="text-muted small">Responsable Marketing</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">Il y a 5 jours</div>
+                        </div>
+                    </div>
+                    <div class="recent-employee-item">
+                        <div class="employee-avatar">YE</div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">Youssef El Amrani</div>
+                            <div class="text-muted small">Comptable</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">Il y a 1 semaine</div>
+                        </div>
+                    </div>
+                `);
+            }
+        });
+    }
+
+    function refreshDashboard() {
+        showNotification('Actualisation du tableau de bord...', 'info');
+        loadDashboardData();
+        loadRecentEmployees();
+        setTimeout(() => {
+            showNotification('Tableau de bord actualisé', 'success');
+        }, 1000);
+    }
+
+    // Period selection for charts
+    $('.btn-group button[data-period]').click(function() {
+        $('.btn-group button').removeClass('active');
+        $(this).addClass('active');
+        
+        const period = $(this).data('period');
+        // Here you would normally load data for the selected period
+        showNotification(`Période changée : ${period}`, 'info');
+    });
+
+    // Initialize dashboard on load
+    $(document).ready(function() {
+        initializeDashboard();
+    });
+
+    // Set up window.initSection for SPA compatibility
+    window.initSection = function(section) {
+        if (section === 'dashboard') {
+            initializeDashboard();
+        }
+    };
+</script>
+        <!-- Dashboard Header -->
+<div class="dashboard-header p-4 border-bottom">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <h1 class="h3 mb-1">
+                <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                Tableau de Bord RH
+            </h1>
+            <p class="text-muted mb-0">
+                <span class="morocco-flag"></span>
+                Vue d'ensemble de votre organisation - <strong id="current-date"></strong>
+            </p>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <button class="btn btn-outline-primary" onclick="refreshDashboard()">
+                    <i class="fas fa-sync-alt me-1"></i> Actualiser
+                </button>
+                <button class="btn btn-primary" onclick="loadContent('reports-dashboard')">
+                    <i class="fas fa-chart-line me-1"></i> Rapports Détaillés
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Content -->
+<div class="dashboard-content p-4">
+    <!-- KPI Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card kpi-card kpi-primary h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <div class="kpi-value" id="total-employees">0</div>
+                            <div class="kpi-label">Employés Actifs</div>
+                            <div class="kpi-change positive" id="employees-change">+0 ce mois</div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="kpi-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card kpi-card kpi-success h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <div class="kpi-value" id="attendance-rate">0%</div>
+                            <div class="kpi-label">Taux de Présence</div>
+                            <div class="kpi-change positive" id="attendance-change">+0% cette semaine</div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="kpi-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card kpi-card kpi-warning h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <div class="kpi-value" id="pending-leaves">0</div>
+                            <div class="kpi-label">Congés en Attente</div>
+                            <div class="kpi-change neutral" id="leaves-change">À traiter</div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="kpi-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card kpi-card kpi-info h-100">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <div class="kpi-value" id="payroll-amount">0 MAD</div>
+                            <div class="kpi-label">Masse Salariale</div>
+                            <div class="kpi-change positive" id="payroll-change">Ce mois</div>
+                        </div>
+                        <div class="col-4 text-end">
+                            <div class="kpi-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i>

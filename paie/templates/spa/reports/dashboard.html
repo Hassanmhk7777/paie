@@ -1,0 +1,122 @@
+
+{% extends "base_spa.html" %}
+
+{% block title %}Tableaux de Bord - PaiePro{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-chart-bar me-2"></i>Tableaux de Bord et Rapports</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="report-card">
+                                <h6><i class="fas fa-users text-primary"></i> Ressources Humaines</h6>
+                                <p>Effectifs, turnover, recrutements</p>
+                                <button class="btn btn-primary btn-sm">Voir Rapport</button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="report-card">
+                                <h6><i class="fas fa-money-bill text-success"></i> Masse Salariale</h6>
+                                <p>Évolution, coûts, charges sociales</p>
+                                <button class="btn btn-success btn-sm">Voir Rapport</button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="report-card">
+                                <h6><i class="fas fa-clock text-warning"></i> Présences</h6>
+                                <p>Assiduité, retards, heures sup</p>
+                                <button class="btn btn-warning btn-sm">Voir Rapport</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-8">
+                            <canvas id="kpiChart" height="300"></canvas>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>Indicateurs Clés</h6>
+                            <div class="kpi-list">
+                                <div class="kpi-item">
+                                    <span class="kpi-label">Employés Actifs</span>
+                                    <span class="kpi-value text-primary">45</span>
+                                </div>
+                                <div class="kpi-item">
+                                    <span class="kpi-label">Taux Présence</span>
+                                    <span class="kpi-value text-success">94.2%</span>
+                                </div>
+                                <div class="kpi-item">
+                                    <span class="kpi-label">Bulletins Traités</span>
+                                    <span class="kpi-value text-info">45/45</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    cleanupSPAPage('reports-dashboard');
+    
+    if (!isSPAPageInitialized('reports-dashboard')) {
+        initReportsDashboard();
+        markSPAPageInitialized('reports-dashboard');
+    }
+});
+
+function initReportsDashboard() {
+    console.log('Initialisation dashboard rapports');
+    
+    // Créer le graphique KPI
+    const ctx = document.getElementById('kpiChart').getContext('2d');
+    const kpiChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Présents', 'En Congé', 'Absents'],
+            datasets: [{
+                data: [42, 2, 1],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    registerChart('reports-dashboard', 'kpiChart', kpiChart);
+}
+</script>
+
+<style>
+.report-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #007bff;
+}
+.kpi-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+.kpi-value {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+</style>
+
+{% endblock %}

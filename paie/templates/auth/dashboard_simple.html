@@ -1,0 +1,409 @@
+{% extends 'base_spa.html' %}
+{% load permission_tags %}
+
+{% block title %}Dashboard Admin - PaiePro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        margin-bottom: 15px;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .stat-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    .quick-action-btn {
+        border-radius: 10px;
+        padding: 12px 20px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: block;
+        margin-bottom: 10px;
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+    
+    .recent-activities {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .activity-item {
+        padding: 12px;
+        border-left: 3px solid #3498db;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    .activity-time {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+    }
+    
+    .welcome-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Section de bienvenue -->
+    <div class="welcome-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="h2 mb-3">
+                    <i class="fas fa-tachometer-alt me-3"></i>
+                    Bienvenue, {{ user.get_full_name|default:user.username }} !
+                </h1>
+                <p class="mb-0 h5">
+                    Dashboard Administrateur - {{ user.profile.get_role_display }}
+                </p>
+                <small class="opacity-75">
+                    Dernière connexion : {{ user.last_login|date:"d/m/Y à H:i" }}
+                </small>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex align-items-center justify-content-end">
+                    <div class="me-3">
+                        <i class="fas fa-shield-alt fa-3x opacity-75"></i>
+                    </div>
+                    <div>
+                        <div class="badge bg-success fs-6">ADMIN</div>
+                        <div class="small mt-1">Accès total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques principales -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-primary mx-auto">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="stat-number" id="total-employees">{{ stats.total_employees|default:"--" }}</h3>
+                    <p class="stat-label">Employés</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-success mx-auto">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3 class="stat-number" id="employees-present">{{ stats.employees_present|default:"--" }}</h3>
+                    <p class="stat-label">Présents aujourd'hui</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-warning mx-auto">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3 class="stat-number" id="pending-leaves">{{ stats.pending_leaves|default:"--" }}</h3>
+                    <p class="stat-label">Congés en attente</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card dashboard-card h-100">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-info mx-auto">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3 class="stat-number" id="payroll-period">{{ stats.current_period|default:"--" }}</h3>
+                    <p class="stat-label">Période en cours</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Actions rapides -->
+        <div class="col-md-4 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2 text-primary"></i>
+                        Actions rapides
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user.profile.can_manage_users %}
+                    <a href="#" onclick="navigateToSPA('spa/admin/users/')" class="btn btn-outline-primary quick-action-btn">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Gérer les utilisateurs
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.profile.can_approve_leaves %}
+                    <a href="#" onclick="navigateToSPA('spa/leaves/approval/')" class="btn btn-outline-success quick-action-btn">
+                        <i class="fas fa-check me-2"></i>
+                        Approuver les congés
+                    </a>
+                    {% endif %}
+                    
+                    <a href="#" onclick="navigateToSPA('spa/payroll/calculation/')" class="btn btn-outline-info quick-action-btn">
+                        <i class="fas fa-calculator me-2"></i>
+                        Calcul paie
+                    </a>
+                    
+                    <a href="#" onclick="navigateToSPA('spa/attendance/reports/')" class="btn btn-outline-warning quick-action-btn">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Rapports présence
+                    </a>
+                    
+                    <a href="#" onclick="navigateToSPA('spa/admin/settings/')" class="btn btn-outline-secondary quick-action-btn">
+                        <i class="fas fa-cog me-2"></i>
+                        Paramètres système
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activités récentes -->
+        <div class="col-md-8 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2 text-info"></i>
+                        Activités récentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="recent-activities" id="recent-activities">
+                        <!-- Les activités seront chargées via JavaScript -->
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin me-2"></i>
+                            Chargement des activités...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques et métriques -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2 text-success"></i>
+                        Tendances mensuelles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyTrendsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-pie-chart me-2 text-danger"></i>
+                        Répartition départements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="departmentChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js pour les graphiques -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Charger les statistiques du dashboard
+    loadDashboardStats();
+    
+    // Charger les activités récentes
+    loadRecentActivities();
+    
+    // Initialiser les graphiques
+    initCharts();
+    
+    // Actualiser les données toutes les 5 minutes
+    setInterval(loadDashboardStats, 5 * 60 * 1000);
+});
+
+function loadDashboardStats() {
+    fetch('/api/dashboard/stats/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mettre à jour les statistiques
+                document.getElementById('total-employees').textContent = data.stats.total_employees || '--';
+                document.getElementById('employees-present').textContent = data.stats.employees_present || '--';
+                document.getElementById('pending-leaves').textContent = data.stats.pending_leaves || '--';
+                document.getElementById('payroll-period').textContent = data.stats.current_period || '--';
+            }
+        })
+        .catch(error => {
+            console.warn('Erreur lors du chargement des statistiques:', error);
+        });
+}
+
+function loadRecentActivities() {
+    fetch('/api/dashboard/recent-activities/')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('recent-activities');
+            
+            if (data.success && data.activities.length > 0) {
+                container.innerHTML = data.activities.map(activity => `
+                    <div class="activity-item">
+                        <div class="d-flex justify-content-between">
+                            <strong>${activity.description}</strong>
+                            <span class="activity-time">${activity.time}</span>
+                        </div>
+                        <small class="text-muted">${activity.user} - ${activity.type}</small>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `
+                    <div class="text-center text-muted">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Aucune activité récente
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            document.getElementById('recent-activities').innerHTML = `
+                <div class="text-center text-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Erreur lors du chargement des activités
+                </div>
+            `;
+        });
+}
+
+function initCharts() {
+    // Graphique des tendances mensuelles
+    const monthlyCtx = document.getElementById('monthlyTrendsChart').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
+            datasets: [{
+                label: 'Employés',
+                data: [65, 68, 70, 72, 75, 78],
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Graphique en secteurs des départements
+    const deptCtx = document.getElementById('departmentChart').getContext('2d');
+    new Chart(deptCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['IT', 'RH', 'Finance', 'Commercial'],
+            datasets: [{
+                data: [30, 15, 25, 30],
+                backgroundColor: [
+                    '#3498db',
+                    '#e74c3c',
+                    '#f39c12',
+                    '#2ecc71'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Fonction de navigation SPA
+function navigateToSPA(path) {
+    // Cette fonction sera définie dans base_spa.html
+    if (typeof loadSPAContent === 'function') {
+        loadSPAContent(path);
+    } else {
+        // Fallback si SPA non disponible
+        window.location.href = '/' + path;
+    }
+}
+</script>
+{% endblock %}

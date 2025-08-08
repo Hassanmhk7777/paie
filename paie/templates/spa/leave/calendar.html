@@ -1,0 +1,894 @@
+<!-- templates/spa/leave/calendar.html -->
+<div class="container-fluid mt-4">
+    <!-- En-tête avec navigation et filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-calendar-alt text-info me-2"></i>
+                        Calendrier des Congés
+                    </h2>
+                    <p class="text-muted mb-0">Planning équipe - {{ planning.periode }}</p>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary" onclick="exportPlanning()">
+                        <i class="fas fa-download me-1"></i> Exporter
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="loadContent('leave-requests')">
+                        <i class="fas fa-plus me-1"></i> Nouvelle Demande
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation et filtres -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <!-- Navigation mois -->
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-outline-secondary me-2" 
+                                        onclick="navigateMonth({{ navigation.precedent.mois }}, {{ navigation.precedent.annee }})">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                
+                                <h5 class="mb-0 mx-3">
+                                    {% load custom_filters %}
+                                    {{ vue_courante.nom_mois }} {{ vue_courante.annee }}
+                                </h5>
+                                
+                                <button class="btn btn-outline-secondary ms-2" 
+                                        onclick="navigateMonth({{ navigation.suivant.mois }}, {{ navigation.suivant.annee }})">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                
+                                <button class="btn btn-outline-primary ms-3" onclick="goToCurrentMonth()">
+                                    <i class="fas fa-home me-1"></i> Aujourd'hui
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Département</label>
+                                    <select class="form-select form-select-sm" onchange="filterByDepartment(this.value)">
+                                        <option value="">Tous les départements</option>
+                                        {% for dept in departements %}
+                                        <option value="{{ dept }}" 
+                                                {% if vue_courante.departement == dept %}selected{% endif %}>
+                                            {{ dept }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Vue</label>
+                                    <select class="form-select form-select-sm" onchange="changeView(this.value)">
+                                        <option value="mois" {% if vue_courante.vue == 'mois' %}selected{% endif %}>
+                                            Calendrier
+                                        </option>
+                                        <option value="liste" {% if vue_courante.vue == 'liste' %}selected{% endif %}>
+                                            Liste
+                                        </option>
+                                        <option value="planning" {% if vue_courante.vue == 'planning' %}selected{% endif %}>
+                                            Planning équipe
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-info h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Employés Totaux
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.total_employes }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-warning h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                En Congé
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.employes_en_conge }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-plane fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-success h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Jours
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.total_jours_conges }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-day fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-left-primary h-100">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Moyenne/Employé
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ stats.moyenne_jours }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Légende des types de congés -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">
+                        <i class="fas fa-palette me-2"></i>
+                        Légende des Types de Congés
+                    </h6>
+                    <div class="row">
+                        {% for type_conge in types_conges %}
+                        <div class="col-md-3 col-lg-2 mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="type-legend-indicator me-2" 
+                                     style="background-color: {{ type_conge.couleur_affichage }}; width: 16px; height: 16px; border-radius: 3px;"></div>
+                                <small>{{ type_conge.libelle }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu principal selon la vue -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <!-- Vue Calendrier -->
+                    {% if vue_courante.vue == 'mois' %}
+                    <div id="calendarView">
+                        <div id="calendarContainer" class="calendar-container">
+                            <!-- Le calendrier sera généré par JavaScript -->
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Vue Liste -->
+                    {% if vue_courante.vue == 'liste' %}
+                    <div id="listView">
+                        <h5 class="mb-3">
+                            <i class="fas fa-list me-2"></i>
+                            Congés du Mois
+                        </h5>
+                        
+                        {% regroup planning.planning.items by 0.departement as departements_groupes %}
+                        {% for dept_group in departements_groupes %}
+                        <div class="dept-group mb-4">
+                            <h6 class="border-bottom pb-2 mb-3 text-primary">
+                                <i class="fas fa-building me-2"></i>
+                                {{ dept_group.grouper|default:"Non assigné" }}
+                            </h6>
+                            
+                            {% for employe, data in dept_group.list %}
+                            {% if data.conges %}
+                            <div class="employee-leaves mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>{{ employe.first_name }} {{ employe.last_name }}</strong>
+                                    <span class="badge bg-light text-dark">
+                                        {{ data.jours_absents }} jour{{ data.jours_absents|pluralize }}
+                                    </span>
+                                </div>
+                                
+                                {% for conge in data.conges %}
+                                <div class="leave-item d-flex align-items-center mb-2 p-2 rounded" 
+                                     style="border-left: 4px solid {{ conge.type_conge.couleur_affichage }}; background-color: {{ conge.type_conge.couleur_affichage }}15;">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold">{{ conge.type_conge.libelle }}</span>
+                                            <small class="text-muted">{{ conge.numero_demande }}</small>
+                                        </div>
+                                        <div class="text-muted small">
+                                            {{ conge.date_debut|date:"d/m" }} - {{ conge.date_fin|date:"d/m/Y" }}
+                                            ({{ conge.nb_jours_ouvrables }} jours)
+                                        </div>
+                                        {% if conge.motif %}
+                                        <div class="text-muted small">
+                                            <i class="fas fa-comment me-1"></i>
+                                            {{ conge.motif|truncatechars:50 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ms-2">
+                                        <span class="badge bg-success">{{ conge.get_statut_display }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-calendar-times fa-3x mb-3 opacity-50"></i>
+                            <h5>Aucun congé ce mois-ci</h5>
+                            <p>Il n'y a aucun congé approuvé pour cette période</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Vue Planning Équipe -->
+                    {% if vue_courante.vue == 'planning' %}
+                    <div id="planningView">
+                        <h5 class="mb-3">
+                            <i class="fas fa-users me-2"></i>
+                            Planning Équipe
+                        </h5>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered planning-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="200">Employé</th>
+                                        {% for jour in planning.jours_mois %}
+                                        <th class="text-center planning-day {% if jour.weekend %}weekend{% endif %}" 
+                                            title="{{ jour.date|date:'l d/m/Y' }}">
+                                            <div class="day-number">{{ jour.date.day }}</div>
+                                            <div class="day-name">{{ jour.date|date:'D' }}</div>
+                                        </th>
+                                        {% endfor %}
+                                        <th class="text-center">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for employe, data in planning.planning.items %}
+                                    <tr>
+                                        <td class="employee-name">
+                                            <div>
+                                                <strong>{{ employe.first_name }} {{ employe.last_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ employe.department.name|default:"N/A" }}</small>
+                                            </div>
+                                        </td>
+                                        {% for jour in planning.jours_mois %}
+                                        <td class="text-center planning-cell {% if jour.weekend %}weekend{% endif %}" 
+                                            data-date="{{ jour.date|date:'Y-m-d' }}"
+                                            data-employe="{{ employe.id }}">
+                                            <!-- Contenu généré par JavaScript -->
+                                        </td>
+                                        {% endfor %}
+                                        <td class="text-center fw-bold">
+                                            {{ data.jours_absents }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section conflits et alertes -->
+    {% if conflits %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Conflits Détectés
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for conflit in conflits %}
+                        <div class="col-md-6 mb-2">
+                            <div class="alert alert-warning alert-sm mb-0">
+                                <strong>{{ conflit.date|date:"d/m/Y" }}:</strong>
+                                {{ conflit.nb_absents }} absent{{ conflit.nb_absents|pluralize }} 
+                                en {{ conflit.departement }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal détail jour -->
+<div class="modal fade" id="dayDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-day me-2"></i>
+                    <span id="dayDetailTitle">Détail du jour</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="dayDetailContent">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" onclick="loadSPAContent('leave/requests')">
+                    <i class="fas fa-plus me-1"></i> Nouvelle Demande
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+let currentMonth = {{ vue_courante.mois }};
+let currentYear = {{ vue_courante.annee }};
+let currentDepartment = '{{ vue_courante.departement }}';
+let currentView = '{{ vue_courante.vue }}';
+
+// Données des congés (passées depuis Django)
+let congesData = {{ planning.conges_json|safe }};
+
+// Naviguer vers un autre mois
+function navigateMonth(mois, annee) {
+    const params = new URLSearchParams();
+    params.set('mois', mois);
+    params.set('annee', annee);
+    if (currentDepartment) params.set('departement', currentDepartment);
+    params.set('vue', currentView);
+    
+    window.location.href = `${window.location.pathname}?${params.toString()}`;
+}
+
+// Aller au mois actuel
+function goToCurrentMonth() {
+    const now = new Date();
+    navigateMonth(now.getMonth() + 1, now.getFullYear());
+}
+
+// Filtrer par département
+function filterByDepartment(dept) {
+    const params = new URLSearchParams();
+    params.set('mois', currentMonth);
+    params.set('annee', currentYear);
+    if (dept) params.set('departement', dept);
+    params.set('vue', currentView);
+    
+    window.location.href = `${window.location.pathname}?${params.toString()}`;
+}
+
+// Changer de vue
+function changeView(vue) {
+    const params = new URLSearchParams();
+    params.set('mois', currentMonth);
+    params.set('annee', currentYear);
+    if (currentDepartment) params.set('departement', currentDepartment);
+    params.set('vue', vue);
+    
+    window.location.href = `${window.location.pathname}?${params.toString()}`;
+}
+
+// Générer le calendrier (vue mois)
+function generateCalendar() {
+    if (currentView !== 'mois') return;
+    
+    const container = document.getElementById('calendarContainer');
+    if (!container) return;
+    
+    const firstDay = new Date(currentYear, currentMonth - 1, 1);
+    const lastDay = new Date(currentYear, currentMonth, 0);
+    const startCalendar = new Date(firstDay);
+    startCalendar.setDate(startCalendar.getDate() - firstDay.getDay());
+    
+    let calendarHTML = '<div class="calendar-grid">';
+    
+    // En-têtes des jours
+    const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    calendarHTML += '<div class="calendar-header">';
+    dayNames.forEach(day => {
+        calendarHTML += `<div class="calendar-day-header">${day}</div>`;
+    });
+    calendarHTML += '</div>';
+    
+    // Générer les jours
+    let currentDate = new Date(startCalendar);
+    for (let week = 0; week < 6; week++) {
+        calendarHTML += '<div class="calendar-week">';
+        
+        for (let day = 0; day < 7; day++) {
+            const isCurrentMonth = currentDate.getMonth() === (currentMonth - 1);
+            const isToday = currentDate.toDateString() === new Date().toDateString();
+            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+            
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const dayConges = getCongesForDate(dateStr);
+            
+            calendarHTML += `
+                <div class="calendar-day ${isCurrentMonth ? 'current-month' : 'other-month'} 
+                     ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''} 
+                     ${dayConges.length > 0 ? 'has-leaves' : ''}"
+                     data-date="${dateStr}" onclick="showDayDetail('${dateStr}')">
+                    <div class="day-number">${currentDate.getDate()}</div>
+                    <div class="day-leaves">
+                        ${renderDayLeaves(dayConges)}
+                    </div>
+                </div>
+            `;
+            
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        calendarHTML += '</div>';
+        
+        // Arrêter si on est au-delà du mois et qu'on a affiché au moins 4 semaines
+        if (week >= 3 && currentDate.getMonth() !== (currentMonth - 1)) {
+            break;
+        }
+    }
+    
+    calendarHTML += '</div>';
+    container.innerHTML = calendarHTML;
+}
+
+// Récupérer les congés pour une date
+function getCongesForDate(dateStr) {
+    return congesData.filter(conge => {
+        const debut = new Date(conge.date_debut);
+        const fin = new Date(conge.date_fin);
+        const date = new Date(dateStr);
+        return date >= debut && date <= fin;
+    });
+}
+
+// Rendre les congés d'un jour
+function renderDayLeaves(conges) {
+    if (conges.length === 0) return '';
+    
+    let html = '';
+    const maxDisplay = 3;
+    
+    for (let i = 0; i < Math.min(conges.length, maxDisplay); i++) {
+        const conge = conges[i];
+        html += `
+            <div class="day-leave-item" 
+                 style="background-color: ${conge.type_conge.couleur_affichage}90;"
+                 title="${conge.employe.first_name} ${conge.employe.last_name} - ${conge.type_conge.libelle}">
+                <small>${conge.employe.first_name}</small>
+            </div>
+        `;
+    }
+    
+    if (conges.length > maxDisplay) {
+        html += `<div class="day-leave-more">+${conges.length - maxDisplay}</div>`;
+    }
+    
+    return html;
+}
+
+// Générer le planning équipe
+function generatePlanning() {
+    if (currentView !== 'planning') return;
+    
+    // Remplir les cellules du planning avec les congés
+    const cells = document.querySelectorAll('.planning-cell');
+    
+    cells.forEach(cell => {
+        const date = cell.dataset.date;
+        const employeId = parseInt(cell.dataset.employe);
+        
+        const congesEmploye = congesData.filter(conge => 
+            conge.employe.id === employeId &&
+            new Date(conge.date_debut) <= new Date(date) &&
+            new Date(conge.date_fin) >= new Date(date)
+        );
+        
+        if (congesEmploye.length > 0) {
+            const conge = congesEmploye[0]; // Premier congé si plusieurs
+            cell.innerHTML = `
+                <div class="planning-leave" 
+                     style="background-color: ${conge.type_conge.couleur_affichage}; color: white; padding: 2px; border-radius: 3px; font-size: 10px;"
+                     title="${conge.type_conge.libelle} - ${conge.numero_demande}">
+                    ${conge.type_conge.code || conge.type_conge.libelle.substring(0, 3)}
+                </div>
+            `;
+            cell.style.backgroundColor = conge.type_conge.couleur_affichage + '20';
+        }
+    });
+}
+
+// Afficher le détail d'un jour
+function showDayDetail(dateStr) {
+    const date = new Date(dateStr);
+    const conges = getCongesForDate(dateStr);
+    
+    document.getElementById('dayDetailTitle').textContent = 
+        `Congés du ${date.toLocaleDateString('fr-FR', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        })}`;
+    
+    let content = '';
+    
+    if (conges.length === 0) {
+        content = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-calendar-check fa-3x mb-3 opacity-50"></i>
+                <h5>Aucun congé ce jour</h5>
+                <p>Aucun employé n'est en congé à cette date</p>
+            </div>
+        `;
+    } else {
+        content = '<div class="list-group">';
+        
+        conges.forEach(conge => {
+            content += `
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="type-conge-indicator me-2" 
+                                     style="background-color: ${conge.type_conge.couleur_affichage}; width: 12px; height: 12px; border-radius: 50%;"></div>
+                                <h6 class="mb-0">${conge.employe.first_name} ${conge.employe.last_name}</h6>
+                            </div>
+                            <p class="mb-1"><strong>${conge.type_conge.libelle}</strong></p>
+                            <p class="mb-1 text-muted">
+                                ${new Date(conge.date_debut).toLocaleDateString('fr-FR')} - 
+                                ${new Date(conge.date_fin).toLocaleDateString('fr-FR')}
+                                (${conge.nb_jours_ouvrables} jours)
+                            </p>
+                            ${conge.motif ? `<p class="mb-0 text-muted small">${conge.motif}</p>` : ''}
+                        </div>
+                        <div class="ms-2">
+                            <span class="badge bg-success">${conge.statut_display}</span>
+                            <br>
+                            <small class="text-muted">${conge.numero_demande}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        content += '</div>';
+    }
+    
+    document.getElementById('dayDetailContent').innerHTML = content;
+    new bootstrap.Modal(document.getElementById('dayDetailModal')).show();
+}
+
+// Exporter le planning
+async function exportPlanning() {
+    try {
+        const params = new URLSearchParams({
+            mois: currentMonth,
+            annee: currentYear,
+            departement: currentDepartment || '',
+            format: 'excel'
+        });
+        
+        const url = `/api/leave/export/planning/?${params.toString()}`;
+        window.open(url, '_blank');
+        
+        showAlert('Export en cours de téléchargement', 'success');
+    } catch (error) {
+        showAlert('Erreur lors de l\'export', 'danger');
+    }
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    if (currentView === 'mois') {
+        generateCalendar();
+    } else if (currentView === 'planning') {
+        generatePlanning();
+    }
+    
+    // Tooltip pour les éléments avec title
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+// Mettre à jour le calendrier si les données changent
+function refreshCalendar() {
+    if (currentView === 'mois') {
+        generateCalendar();
+    } else if (currentView === 'planning') {
+        generatePlanning();
+    }
+}
+</script>
+
+<style>
+/* Styles pour le calendrier */
+.calendar-container {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.calendar-grid {
+    display: flex;
+    flex-direction: column;
+    min-width: 700px;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+}
+
+.calendar-day-header {
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-right: 1px solid #dee2e6;
+}
+
+.calendar-day-header:last-child {
+    border-right: none;
+}
+
+.calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-day {
+    min-height: 100px;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    padding: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.calendar-day:hover {
+    background-color: #f8f9fa;
+}
+
+.calendar-day.other-month {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.calendar-day.today {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+    font-weight: bold;
+}
+
+.calendar-day.weekend {
+    background-color: #fff3e0;
+}
+
+.calendar-day.has-leaves {
+    background-color: #e8f5e8;
+}
+
+.day-number {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.day-leaves {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.day-leave-item {
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 10px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.day-leave-more {
+    font-size: 10px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* Styles pour le planning équipe */
+.planning-table {
+    font-size: 12px;
+}
+
+.planning-day {
+    width: 30px;
+    min-width: 30px;
+}
+
+.planning-day.weekend {
+    background-color: #f8f9fa;
+}
+
+.planning-cell {
+    width: 30px;
+    height: 30px;
+    vertical-align: middle;
+    position: relative;
+}
+
+.planning-cell.weekend {
+    background-color: #f8f9fa !important;
+}
+
+.planning-leave {
+    font-size: 9px !important;
+    padding: 1px 2px !important;
+    text-align: center;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.employee-name {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 10;
+    border-right: 2px solid #dee2e6;
+}
+
+.day-number {
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.day-name {
+    font-size: 8px;
+    text-transform: uppercase;
+}
+
+/* Styles pour la vue liste */
+.dept-group {
+    margin-bottom: 2rem;
+}
+
+.employee-leaves {
+    padding-left: 20px;
+    border-left: 2px solid #e9ecef;
+}
+
+.leave-item {
+    margin-left: 10px;
+}
+
+/* Styles généraux */
+.border-left-info { border-left: 4px solid #17a2b8 !important; }
+.border-left-warning { border-left: 4px solid #ffc107 !important; }
+.border-left-success { border-left: 4px solid #28a745 !important; }
+.border-left-primary { border-left: 4px solid #007bff !important; }
+
+.type-legend-indicator {
+    flex-shrink: 0;
+}
+
+.type-conge-indicator {
+    flex-shrink: 0;
+}
+
+.alert-sm {
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 60px;
+        font-size: 12px;
+    }
+    
+    .day-leave-item {
+        font-size: 8px;
+        padding: 1px 2px;
+    }
+    
+    .planning-table {
+        font-size: 10px;
+    }
+    
+    .planning-day {
+        width: 25px;
+        min-width: 25px;
+    }
+    
+    .planning-cell {
+        width: 25px;
+        height: 25px;
+    }
+}
+
+/* Animation pour les congés */
+.day-leave-item {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scroll horizontal pour planning sur mobile */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.planning-table {
+    min-width: 800px;
+}
+</style>

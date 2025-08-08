@@ -1,0 +1,228 @@
+
+<!-- spa/payroll/parametrage.html -->
+<div class="container-fluid mt-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-cogs text-primary me-2"></i>
+                        Paramètres Paie
+                    </h2>
+                    <p class="text-muted mb-0">Configuration et paramétrage de la paie marocaine</p>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary" onclick="loadContent('payroll-calculation')">
+                        <i class="fas fa-calculator me-1"></i> Calculer
+                    </button>
+                    <button type="button" class="btn btn-success" id="btn-save-params">
+                        <i class="fas fa-save me-1"></i> Sauvegarder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- CNSS et Cotisations -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>CNSS & Cotisations Sociales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="cnss-form">
+                        <div class="mb-3">
+                            <label class="form-label">Taux Salarié CNSS (%)</label>
+                            <input type="number" class="form-control" id="cnss-salarie" value="4.48" step="0.01" min="0" max="100">
+                            <small class="form-text text-muted">Taux de cotisation salarié</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Taux Patronal CNSS (%)</label>
+                            <input type="number" class="form-control" id="cnss-patronal" value="12.89" step="0.01" min="0" max="100">
+                            <small class="form-text text-muted">Taux de cotisation patronale</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Plafond CNSS (MAD)</label>
+                            <input type="number" class="form-control" id="plafond-cnss" value="6000" step="100" min="0">
+                            <small class="form-text text-muted">Plafond mensuel CNSS</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- IR - Impôt sur le Revenu -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-percentage me-2"></i>Barème IR (Impôt sur le Revenu)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tranche (MAD/mois)</th>
+                                    <th>Taux (%)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0 - 30,000</td>
+                                    <td><span class="badge bg-secondary">0%</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>30,001 - 50,000</td>
+                                    <td><span class="badge bg-info">10%</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>50,001 - 60,000</td>
+                                    <td><span class="badge bg-warning">20%</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>60,001 - 80,000</td>
+                                    <td><span class="badge bg-orange">30%</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>80,001+</td>
+                                    <td><span class="badge bg-danger">38%</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Indemnités et Avantages -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-gift me-2"></i>Indemnités & Avantages
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Indemnité Transport (MAD)</label>
+                            <input type="number" class="form-control" value="300" step="50">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Prime Ancienneté (%/an)</label>
+                            <input type="number" class="form-control" value="5" step="1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Heures Supplémentaires (%)</label>
+                            <input type="number" class="form-control" value="25" step="5">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Jours fériés et congés -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Congés & Jours Fériés
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Congés annuels (jours/an)</label>
+                            <input type="number" class="form-control" value="22" step="1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jours ouvrables/semaine</label>
+                            <input type="number" class="form-control" value="5" step="1" min="1" max="7">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Heures/jour</label>
+                            <input type="number" class="form-control" value="8" step="0.5" min="1">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    console.log('Initialisation Paramètres Paie');
+    initParametrage();
+});
+
+function initParametrage() {
+    // Gestionnaire de sauvegarde
+    $('#btn-save-params').click(function() {
+        sauvegarderParametres();
+    });
+    
+    // Validation en temps réel
+    $('input[type="number"]').on('input', function() {
+        validateNumericInput($(this));
+    });
+}
+
+function sauvegarderParametres() {
+    const parametres = {
+        cnss_salarie: $('#cnss-salarie').val(),
+        cnss_patronal: $('#cnss-patronal').val(),
+        plafond_cnss: $('#plafond-cnss').val()
+    };
+    
+    // Simulation de sauvegarde
+    console.log('Sauvegarde des paramètres:', parametres);
+    
+    // Notification de succès
+    showNotification('Paramètres sauvegardés avec succès', 'success');
+}
+
+function validateNumericInput(input) {
+    const value = parseFloat(input.val());
+    const min = parseFloat(input.attr('min')) || 0;
+    const max = parseFloat(input.attr('max')) || Infinity;
+    
+    if (value < min || value > max) {
+        input.addClass('is-invalid');
+    } else {
+        input.removeClass('is-invalid').addClass('is-valid');
+    }
+}
+</script>

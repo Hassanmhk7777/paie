@@ -1,0 +1,144 @@
+
+{% extends "base_spa.html" %}
+
+{% block title %}Interface Pointage - PaiePro{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h4><i class="fas fa-fingerprint me-2"></i>Interface de Pointage</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="clock-display mb-4">
+                        <div id="current-time" class="display-4 text-primary">--:--:--</div>
+                        <div id="current-date" class="text-muted">-- -- ----</div>
+                    </div>
+                    
+                    <div class="employee-selection mb-4">
+                        <select id="employee-select" class="form-select">
+                            <option value="">Sélectionner un employé...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="btn-clock-in" class="btn btn-success btn-lg me-3">
+                            <i class="fas fa-sign-in-alt"></i> Entrée
+                        </button>
+                        <button id="btn-clock-out" class="btn btn-danger btn-lg">
+                            <i class="fas fa-sign-out-alt"></i> Sortie
+                        </button>
+                    </div>
+                    
+                    <div id="status-message" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    cleanupSPAPage('timeclock');
+    
+    if (!isSPAPageInitialized('timeclock')) {
+        initTimeclock();
+        markSPAPageInitialized('timeclock');
+    }
+});
+
+function initTimeclock() {
+    console.log('Initialisation interface pointage');
+    
+    // Mettre à jour l'heure
+    updateClock();
+    const clockInterval = setInterval(updateClock, 1000);
+    
+    // Enregistrer l'interval pour nettoyage
+    if (!window.SPA_PAIE.intervals['timeclock']) {
+        window.SPA_PAIE.intervals['timeclock'] = {};
+    }
+    window.SPA_PAIE.intervals['timeclock']['clock'] = clockInterval;
+    
+    // Charger la liste des employés
+    loadEmployeesList();
+    
+    // Event handlers
+    $('#btn-clock-in').click(() => handleClockAction('in'));
+    $('#btn-clock-out').click(() => handleClockAction('out'));
+}
+
+function updateClock() {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('fr-FR');
+    const dateStr = now.toLocaleDateString('fr-FR', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    $('#current-time').text(timeStr);
+    $('#current-date').text(dateStr);
+}
+
+function loadEmployeesList() {
+    // Simulation - remplacer par un appel API réel
+    const employees = [
+        { id: 1, name: 'John Doe' },
+        { id: 2, name: 'Jane Smith' },
+        { id: 3, name: 'Bob Johnson' }
+    ];
+    
+    const options = employees.map(emp => 
+        `<option value="${emp.id}">${emp.name}</option>`
+    ).join('');
+    
+    $('#employee-select').append(options);
+}
+
+function handleClockAction(action) {
+    const employeeId = $('#employee-select').val();
+    if (!employeeId) {
+        showMessage('Veuillez sélectionner un employé', 'warning');
+        return;
+    }
+    
+    const actionText = action === 'in' ? 'Entrée' : 'Sortie';
+    showMessage(`${actionText} enregistrée avec succès!`, 'success');
+    
+    // Ici, ajouter l'appel API réel
+    console.log(`Action: ${action}, Employee: ${employeeId}`);
+}
+
+function showMessage(text, type) {
+    const alertClass = `alert-${type}`;
+    $('#status-message').html(`<div class="alert ${alertClass}">${text}</div>`);
+    
+    setTimeout(() => {
+        $('#status-message').empty();
+    }, 3000);
+}
+</script>
+
+<style>
+.clock-display {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin: 2rem 0;
+}
+.employee-selection {
+    max-width: 400px;
+    margin: 0 auto;
+}
+.action-buttons button {
+    min-width: 150px;
+}
+</style>
+
+{% endblock %}

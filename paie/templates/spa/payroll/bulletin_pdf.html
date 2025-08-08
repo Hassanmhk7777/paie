@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Bulletin de Paie</title>
+    <style>
+        @page {
+            size: a4;
+            margin: 1cm;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 9pt;
+            color: #000;
+            margin: 0;
+            padding: 10px;
+        }
+        
+        /* En-tête avec informations administratives */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 8pt;
+        }
+        
+        .admin-left, .admin-right {
+            width: 48%;
+        }
+        
+        .admin-left div, .admin-right div {
+            margin-bottom: 2px;
+        }
+        
+        /* Titre principal */
+        .main-title {
+            text-align: center;
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px;
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        /* Section informations employé */
+        .employee-section {
+            margin-bottom: 15px;
+        }
+        
+        .employee-header {
+            background-color: #2196F3;
+            color: white;
+            padding: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .employee-info {
+            display: flex;
+            border: 1px solid #ccc;
+        }
+        
+        .employee-info > div {
+            flex: 1;
+            padding: 5px;
+            border-right: 1px solid #ccc;
+        }
+        
+        .employee-info > div:last-child {
+            border-right: none;
+        }
+        
+        /* Tableau principal des rubriques */
+        .main-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 8pt;
+        }
+        
+        .main-table th {
+            background-color: #2196F3;
+            color: white;
+            padding: 8px 4px;
+            text-align: center;
+            border: 1px solid #000;
+            font-weight: bold;
+        }
+        
+        .main-table td {
+            padding: 4px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        
+        .main-table .text-left {
+            text-align: left;
+        }
+        
+        .main-table .text-right {
+            text-align: right;
+        }
+        
+        /* Lignes de totaux */
+        .total-row {
+            background-color: #E3F2FD;
+            font-weight: bold;
+        }
+        
+        /* Section des totaux en bas */
+        .totals-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .totals-left, .totals-right {
+            flex: 1;
+        }
+        
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+        
+        .totals-table th {
+            background-color: #2196F3;
+            color: white;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #000;
+        }
+        
+        .totals-table td {
+            padding: 5px;
+            border: 1px solid #ccc;
+            text-align: right;
+        }
+        
+        /* Net à payer final */
+        .final-net {
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 12pt;
+            font-weight: bold;
+        }
+        
+        .highlight-cell {
+            background-color: #FFEB3B;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- En-tête administratif -->
+    <div class="admin-header">
+        <div class="admin-left">
+            <div><strong>RAISON SOCIALE:</strong> {{ bulletin.employe.site.nom_entreprise }}</div>
+            <div><strong>N° AFF CNSS:</strong> 000000</div>
+            <div><strong>N° ID FISCAL:</strong> XXXXXXXXXXXX</div>
+            <div><strong>SIEGE SOCIAL:</strong> {{ bulletin.employe.site.adresse }}</div>
+        </div>
+        <div class="admin-right">
+            <div><strong>Période:</strong> {{ bulletin.periode.libelle }}</div>
+            <div><strong>Date d'émission:</strong> {% now "d/m/Y" %}</div>
+            <div><strong>N° Bulletin:</strong> {{ bulletin.numero_bulletin }}</div>
+        </div>
+    </div>
+    
+    <!-- Titre principal -->
+    <div class="main-title">BULLETIN DE PAIE</div>
+    
+    <!-- Section informations employé -->
+    <div class="employee-section">
+        <div class="employee-header">NOM ET PRENOM | FONCTION | MATRICULE | TYPE DE CONTRAT</div>
+        <div class="employee-info">
+            <div><strong>{{ bulletin.employe.nom }} {{ bulletin.employe.prenom }}</strong><br>{{ bulletin.employe.poste }}</div>
+            <div><strong>{{ bulletin.employe.matricule }}</strong></div>
+            <div><strong>CDI</strong></div>
+        </div>
+    </div>
+    
+    <!-- Dates importantes -->
+    <div class="employee-section">
+        <div style="display: flex; border: 1px solid #ccc;">
+            <div style="flex: 1; padding: 5px; border-right: 1px solid #ccc;"><strong>DATE EMBAUCHE:</strong><br>{{ bulletin.employe.date_embauche|date:"d/m/Y" }}</div>
+            <div style="flex: 1; padding: 5px; border-right: 1px solid #ccc;"><strong>DATE NAISSANCE:</strong><br>08/04/1987</div>
+            <div style="flex: 1; padding: 5px; border-right: 1px solid #ccc;"><strong>SF:</strong><br>C</div>
+            <div style="flex: 1; padding: 5px; border-right: 1px solid #ccc;"><strong>NBR ENF:</strong><br>0</div>
+            <div style="flex: 1; padding: 5px;"><strong>PERIODE DE PAIE:</strong><br>Juin</div>
+        </div>
+    </div>
+    
+    <!-- Tableau principal des rubriques -->
+    <table class="main-table">
+        <thead>
+            <tr>
+                <th>RUBRIQUE</th>
+                <th>BASE</th>
+                <th>TAUX</th>
+                <th>GAIN</th>
+                <th>RETENUE</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Salaire de base -->
+            <tr>
+                <td class="text-left">SALAIRE HORAIRE</td>
+                <td>191</td>
+                <td>20,94</td>
+                <td class="text-right">4 000,00</td>
+                <td></td>
+            </tr>
+            
+            <!-- Heures supplémentaires -->
+            <tr>
+                <td class="text-left">HEURES SUPP. 25%</td>
+                <td>3</td>
+                <td>125%</td>
+                <td class="text-right">79,00</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text-left">HEURES SUPP. 50%</td>
+                <td>0</td>
+                <td>150%</td>
+                <td class="text-right">0,00</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text-left">HEURES SUPP. 100%</td>
+                <td>0</td>
+                <td>200%</td>
+                <td class="text-right">0,00</td>
+                <td></td>
+            </tr>
+            
+            <!-- Ancienneté -->
+            <tr>
+                <td class="text-left">ANCIENNETE</td>
+                <td>4079</td>
+                <td>10%</td>
+                <td class="text-right">408,00</td>
+                <td></td>
+            </tr>
+            
+            <!-- Indemnités -->
+            <tr>
+                <td class="text-left">INDEMNITE</td>
+                <td></td>
+                <td></td>
+                <td class="text-right">0,00</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text-left">CONGE PAYE</td>
+                <td>0</td>
+                <td>20,94</td>
+                <td class="text-right">0,00</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="text-left">REP. CONGE PAYE</td>
+                <td>0</td>
+                <td>20,94</td>
+                <td></td>
+                <td class="text-right">0,00</td>
+            </tr>
+            <tr>
+                <td class="text-left">13° MOIS</td>
+                <td>56</td>
+                <td>0,00</td>
+                <td></td>
+                <td></td>
+            </tr>
+            
+            <!-- Salaire brut -->
+            <tr class="total-row">
+                <td class="text-left"><strong>SALAIRE BRUT IMP</strong></td>
+                <td><strong>4487</strong></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            
+            <!-- Cotisations sociales -->
+            <tr>
+                <td class="text-left">CNSS</td>
+                <td>4487</td>
+                <td>4,48%</td>
+                <td></td>
+                <td class="text-right">201,00</td>
+            </tr>
+            <tr>
+                <td class="text-left">CIMR</td>
+                <td>4487</td>
+                <td>6%</td>
+                <td></td>
+                <td class="text-right">269,00</td>
+            </tr>
+            <tr>
+                <td class="text-left">AMO</td>
+                <td>4487</td>
+                <td>2,26%</td>
+                <td></td>
+                <td class="text-right">101,00</td>
+            </tr>
+            
+            <!-- Salaire net imposable -->
+            <tr class="total-row">
+                <td class="text-left"><strong>SALAIRE NET IMP</strong></td>
+                <td><strong>3 018,60</strong></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            
+            <!-- IR -->
+            <tr>
+                <td class="text-left">IR NET</td>
+                <td>3 018,60</td>
+                <td></td>
+                <td></td>
+                <td class="text-right highlight-cell">51,86</td>
+            </tr>
+            
+            <!-- Prime de transport -->
+            <tr>
+                <td class="text-left">PRIME DE TRANSPORT</td>
+                <td></td>
+                <td></td>
+                <td class="text-right">600,00</td>
+                <td></td>
+            </tr>
+            
+            <!-- Avance sur salaire -->
+            <tr>
+                <td class="text-left">AVANCE SUR SALAIRE</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-right">1 000,00</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <!-- Section des totaux -->
+    <div class="totals-section">
+        <div class="totals-left">
+            <table class="totals-table">
+                <thead>
+                    <tr>
+                        <th colspan="2">CUMUL ANNUEL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Salaire Brut</td>
+                        <td>26,00</td>
+                    </tr>
+                    <tr>
+                        <td>CNSS</td>
+                        <td>4 487,00</td>
+                    </tr>
+                    <tr>
+                        <td>CIMR</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>AMO</td>
+                        <td>571,00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="totals-right">
+            <table class="totals-table">
+                <thead>
+                    <tr>
+                        <th colspan="2">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Gains</td>
+                        <td>5 087,00</td>
+                    </tr>
+                    <tr>
+                        <td>Total Retenues</td>
+                        <td>1 622,86</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Net à payer final -->
+    <div class="final-net">
+        NET A PAYER: 3 464,14 MAD
+    </div>
+</body>
+</html>

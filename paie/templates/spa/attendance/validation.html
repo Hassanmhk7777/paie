@@ -1,0 +1,84 @@
+
+{% extends "base_spa.html" %}
+
+{% block title %}Validation Pointages - PaiePro{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fas fa-check-circle me-2"></i>Validation et Correction des Pointages</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table" id="validation-table">
+                            <thead>
+                                <tr>
+                                    <th>Employé</th>
+                                    <th>Date</th>
+                                    <th>Entrée</th>
+                                    <th>Sortie</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="6" class="text-center">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    cleanupSPAPage('validation');
+    
+    if (!isSPAPageInitialized('validation')) {
+        initValidation();
+        markSPAPageInitialized('validation');
+    }
+});
+
+function initValidation() {
+    console.log('Initialisation validation pointages');
+    loadValidationData();
+}
+
+function loadValidationData() {
+    // Simulation de données
+    const rows = `
+        <tr>
+            <td>John Doe</td>
+            <td>08/08/2025</td>
+            <td>08:15</td>
+            <td>17:30</td>
+            <td><span class="badge bg-warning">En attente</span></td>
+            <td>
+                <button class="btn btn-sm btn-success">Valider</button>
+                <button class="btn btn-sm btn-warning">Corriger</button>
+            </td>
+        </tr>
+        <tr>
+            <td>Jane Smith</td>
+            <td>08/08/2025</td>
+            <td>07:45</td>
+            <td>16:45</td>
+            <td><span class="badge bg-success">Validé</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary">Voir</button>
+            </td>
+        </tr>
+    `;
+    
+    $('#validation-table tbody').html(rows);
+}
+</script>
+
+{% endblock %}

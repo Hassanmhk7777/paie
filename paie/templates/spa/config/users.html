@@ -1,0 +1,117 @@
+<!-- Gestion Utilisateurs -->
+<div class="users-header p-4 border-bottom">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="h3 mb-1">
+                <i class="fas fa-users-cog text-primary me-2"></i>
+                Gestion des Utilisateurs
+            </h1>
+            <p class="text-muted mb-0">
+                Système de rôles : Admin → RH → Employé
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/admin/auth/user/" target="_blank" class="btn btn-primary">
+                <i class="fas fa-user-plus me-1"></i> Admin Django
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="users-content p-4">
+    <!-- Roles Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card role-card role-admin">
+                <div class="card-body text-center">
+                    <div class="role-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <h5 class="card-title">ADMIN</h5>
+                    <p class="card-text">Tous les droits + Assigner rôle RH</p>
+                    <span class="badge bg-danger">Accès Complet</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card role-card role-hr">
+                <div class="card-body text-center">
+                    <div class="role-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h5 class="card-title">RH</h5>
+                    <p class="card-text">Créer utilisateurs (sans rôle RH)</p>
+                    <span class="badge bg-warning">Gestion RH</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card role-card role-employee">
+                <div class="card-body text-center">
+                    <div class="role-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h5 class="card-title">EMPLOYÉ</h5>
+                    <p class="card-text">Consultation des données personnelles</p>
+                    <span class="badge bg-success">Basique</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Development Notice -->
+    <div class="card">
+        <div class="card-body text-center">
+            <i class="fas fa-code fa-3x text-primary mb-3"></i>
+            <h4>Module en Développement</h4>
+            <p class="text-muted mb-3">
+                Le système de gestion des utilisateurs avec rôles Admin/RH/Employé sera implémenté dans la prochaine phase.
+            </p>
+            <div class="alert alert-info">
+                <strong>Spécifications Maroc :</strong>
+                <ul class="list-unstyled mb-0 mt-2">
+                    <li>✅ Admin peut créer utilisateurs et assigner rôle RH</li>
+                    <li>✅ RH peut créer utilisateurs (mais pas assigner RH)</li>
+                    <li>✅ Employé accède à ses données uniquement</li>
+                    <li>✅ Workflow approbation congés par Admin/RH</li>
+                </ul>
+            </div>
+            <a href="/admin/auth/user/" target="_blank" class="btn btn-primary">
+                <i class="fas fa-external-link-alt me-1"></i> Gérer dans Django Admin
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .role-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .role-admin { border-left: 5px solid #dc2626; }
+    .role-hr { border-left: 5px solid #ea580c; }
+    .role-employee { border-left: 5px solid #16a34a; }
+    
+    .role-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin: 0 auto 1rem;
+    }
+    
+    .role-admin .role-icon { background: linear-gradient(135deg, #dc2626, #ef4444); }
+    .role-hr .role-icon { background: linear-gradient(135deg, #ea580c, #f97316); }
+    .role-employee .role-icon { background: linear-gradient(135deg, #16a34a, #22c55e); }
+</style>

@@ -1,0 +1,919 @@
+<!-- templates/spa/leave/requests.html -->
+<div class="container-fluid mt-4">
+    <!-- En-tête avec statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-plane text-success me-2"></i>
+                        Mes Demandes de Congés
+                    </h2>
+                    <p class="text-muted mb-0">Gestion et suivi de vos congés</p>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary" onclick="showSoldesModal()">
+                        <i class="fas fa-chart-pie me-1"></i> Mes Soldes
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="showNewRequestModal()">
+                        <i class="fas fa-plus me-1"></i> Nouvelle Demande
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistiques rapides -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card border-left-primary h-100">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Demandes
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ stats.total_demandes }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-file-alt fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card border-left-warning h-100">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        En Attente
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ stats.demandes_en_attente }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card border-left-success h-100">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Approuvées
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ stats.demandes_approuvees }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check-circle fa-2x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card border-left-info h-100">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Jours Pris {{ annee_courante }}
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ stats.jours_pris_annee }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calendar-day fa-2x text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mes demandes de congés -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Mes Demandes ({{ demandes.paginator.count }} total)
+                        </h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary" onclick="toggleView('table')" id="viewTableBtn">
+                                <i class="fas fa-table"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="toggleView('cards')" id="viewCardsBtn">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Vue tableau (par défaut) -->
+                    <div id="tableView">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>N° Demande</th>
+                                        <th>Type de Congé</th>
+                                        <th>Période</th>
+                                        <th>Durée</th>
+                                        <th>Statut</th>
+                                        <th>Créée le</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for demande in demandes %}
+                                    <tr>
+                                        <td>
+                                            <span class="fw-bold">{{ demande.numero_demande }}</span>
+                                            {% if demande.priorite == 'URGENTE' %}
+                                            <span class="badge bg-danger ms-1">Urgent</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="type-conge-indicator me-2" 
+                                                     style="background-color: {{ demande.type_conge.couleur_affichage }}; width: 12px; height: 12px; border-radius: 50%;"></div>
+                                                <span>{{ demande.type_conge.libelle }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong>{{ demande.date_debut|date:"d/m/Y" }} - {{ demande.date_fin|date:"d/m/Y" }}</strong>
+                                            {% if demande.motif %}
+                                            <br><small class="text-muted">{{ demande.motif|truncatechars:50 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-light text-dark">
+                                                {{ demande.nb_jours_ouvrables }} jour{{ demande.nb_jours_ouvrables|pluralize }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if demande.statut == 'BROUILLON' %}
+                                                <span class="badge bg-secondary">{{ demande.get_statut_display }}</span>
+                                            {% elif demande.statut == 'SOUMISE' %}
+                                                <span class="badge bg-info">{{ demande.get_statut_display }}</span>
+                                            {% elif 'ATTENTE' in demande.statut %}
+                                                <span class="badge bg-warning">{{ demande.get_statut_display }}</span>
+                                            {% elif demande.statut == 'APPROUVEE' %}
+                                                <span class="badge bg-success">{{ demande.get_statut_display }}</span>
+                                            {% elif demande.statut == 'REFUSEE' %}
+                                                <span class="badge bg-danger">{{ demande.get_statut_display }}</span>
+                                            {% elif demande.statut == 'ANNULEE' %}
+                                                <span class="badge bg-dark">{{ demande.get_statut_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-primary">{{ demande.get_statut_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ demande.date_creation|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" 
+                                                        onclick="viewRequestDetail({{ demande.id }})"
+                                                        title="Voir détail">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if demande.est_modifiable %}
+                                                <button class="btn btn-outline-warning" 
+                                                        onclick="editRequest({{ demande.id }})"
+                                                        title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% if demande.est_annulable %}
+                                                <button class="btn btn-outline-danger" 
+                                                        onclick="cancelRequest({{ demande.id }})"
+                                                        title="Annuler">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-5">
+                                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                                            <p>Aucune demande de congé trouvée</p>
+                                            <button class="btn btn-success" onclick="showNewRequestModal()">
+                                                <i class="fas fa-plus me-1"></i> Créer ma première demande
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Vue cartes (masquée par défaut) -->
+                    <div id="cardsView" class="d-none p-3">
+                        <div class="row">
+                            {% for demande in demandes %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card h-100 border-left-{% if demande.statut == 'APPROUVEE' %}success{% elif 'ATTENTE' in demande.statut %}warning{% elif demande.statut == 'REFUSEE' %}danger{% else %}primary{% endif %}">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ demande.numero_demande }}</h6>
+                                                <p class="card-text text-muted mb-1">
+                                                    {{ demande.type_conge.libelle }}
+                                                </p>
+                                                <small class="text-muted">{{ demande.date_debut|date:"d/m" }} - {{ demande.date_fin|date:"d/m/Y" }}</small>
+                                            </div>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                                        data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" onclick="viewRequestDetail({{ demande.id }})">
+                                                        <i class="fas fa-eye me-2"></i>Voir détail</a></li>
+                                                    {% if demande.est_modifiable %}
+                                                    <li><a class="dropdown-item" href="#" onclick="editRequest({{ demande.id }})">
+                                                        <i class="fas fa-edit me-2"></i>Modifier</a></li>
+                                                    {% endif %}
+                                                    {% if demande.est_annulable %}
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" onclick="cancelRequest({{ demande.id }})">
+                                                        <i class="fas fa-times me-2"></i>Annuler</a></li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <small class="text-muted">Durée</small>
+                                                <div class="fw-bold">{{ demande.nb_jours_ouvrables }} jour{{ demande.nb_jours_ouvrables|pluralize }}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Statut</small>
+                                                <div>
+                                                    {% if demande.statut == 'APPROUVEE' %}
+                                                        <span class="badge bg-success">Approuvée</span>
+                                                    {% elif 'ATTENTE' in demande.statut %}
+                                                        <span class="badge bg-warning">En attente</span>
+                                                    {% elif demande.statut == 'REFUSEE' %}
+                                                        <span class="badge bg-danger">Refusée</span>
+                                                    {% else %}
+                                                        <span class="badge bg-primary">{{ demande.get_statut_display }}</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if demandes.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Pagination demandes">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if demandes.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ demandes.previous_page_number }}">
+                                        Précédent
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in demandes.paginator.page_range %}
+                                {% if demandes.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > demandes.number|add:'-3' and num < demandes.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if demandes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ demandes.next_page_number }}">
+                                        Suivant
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal nouvelle demande -->
+<div class="modal fade" id="newRequestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    Nouvelle Demande de Congé
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newRequestForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Type de congé <span class="text-danger">*</span></label>
+                            <select class="form-select" id="type_conge" required onchange="updateTypeCongeInfo()">
+                                <option value="">Sélectionner un type</option>
+                                {% for type_conge in types_conges %}
+                                <option value="{{ type_conge.id }}" 
+                                        data-couleur="{{ type_conge.couleur_affichage }}"
+                                        data-justificatif="{{ type_conge.justificatif_requis|yesno:'true,false' }}"
+                                        data-max-jours="{{ type_conge.jours_max_annuel }}">
+                                    {{ type_conge.libelle }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div id="typeCongeInfo" class="form-text d-none"></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Priorité</label>
+                            <select class="form-select" id="priorite">
+                                <option value="NORMALE">Normale</option>
+                                <option value="URGENTE">Urgente</option>
+                                <option value="PLANIFIEE">Planifiée</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date de début <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date_debut" required 
+                                   onchange="calculateDuration()" min="{{ 'now'|date:'Y-m-d' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Date de fin <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date_fin" required 
+                                   onchange="calculateDuration()">
+                        </div>
+                    </div>
+                    
+                    <!-- Informations calculées -->
+                    <div class="alert alert-info d-none" id="durationInfo">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Durée totale:</strong> <span id="joursCalendaires">-</span> jours calendaires
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Jours ouvrables:</strong> <span id="joursOuvrables">-</span> jours
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Motif</label>
+                        <textarea class="form-control" id="motif" rows="3" 
+                                  placeholder="Expliquez brièvement la raison de votre demande..."></textarea>
+                    </div>
+                    
+                    <!-- Section justificatif -->
+                    <div class="mb-3 d-none" id="justificatifSection">
+                        <label class="form-label">Justificatif <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="justificatif" 
+                               accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="form-text">Formats acceptés: PDF, JPG, PNG (max 5MB)</div>
+                    </div>
+                    
+                    <!-- Validation en temps réel -->
+                    <div id="validationMessages"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" onclick="submitNewRequest()">
+                    <i class="fas fa-paper-plane me-1"></i> Soumettre la Demande
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal soldes -->
+<div class="modal fade" id="soldesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Mes Soldes de Congés {{ annee_courante }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    {% for code, solde in soldes.items %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card border-left-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ solde.type_conge.libelle }}</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Acquis:</small>
+                                                <div class="fw-bold text-success">{{ solde.jours_acquis }}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Pris:</small>
+                                                <div class="fw-bold text-danger">{{ solde.jours_pris }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-muted small">Restants</div>
+                                        <div class="h4 mb-0 {% if solde.jours_restants > 0 %}text-success{% elif solde.jours_restants == 0 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ solde.jours_restants }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Barre de progression -->
+                                <div class="progress mt-2" style="height: 6px;">
+                                    {% if solde.jours_acquis > 0 %}
+                                        {% widthratio solde.jours_pris solde.jours_acquis 100 as pourcentage %}
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {{ pourcentage|default:0 }}%"></div>
+                                    {% else %}
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: 0%"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-primary" onclick="loadSPAContent('leave/balances')">
+                    <i class="fas fa-chart-bar me-1"></i> Voir Détails
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal détail demande -->
+<div class="modal fade" id="detailRequestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Détail de la Demande
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailRequestContent">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+let currentEmployeId = {{ employe.id }};
+
+// Toggle entre vue tableau et cartes
+function toggleView(view) {
+    const tableView = document.getElementById('tableView');
+    const cardsView = document.getElementById('cardsView');
+    const tableBtn = document.getElementById('viewTableBtn');
+    const cardsBtn = document.getElementById('viewCardsBtn');
+    
+    if (view === 'table') {
+        tableView.classList.remove('d-none');
+        cardsView.classList.add('d-none');
+        tableBtn.classList.add('active');
+        cardsBtn.classList.remove('active');
+    } else {
+        tableView.classList.add('d-none');
+        cardsView.classList.remove('d-none');
+        tableBtn.classList.remove('active');
+        cardsBtn.classList.add('active');
+    }
+}
+
+// Afficher modal nouvelle demande
+function showNewRequestModal() {
+    document.getElementById('newRequestForm').reset();
+    document.getElementById('validationMessages').innerHTML = '';
+    document.getElementById('durationInfo').classList.add('d-none');
+    new bootstrap.Modal(document.getElementById('newRequestModal')).show();
+}
+
+// Afficher modal soldes
+function showSoldesModal() {
+    // Afficher la modal immédiatement
+    const modal = new bootstrap.Modal(document.getElementById('soldesModal'));
+    modal.show();
+    
+    // Charger les données via API
+    {% if request.user.employee %}
+    const currentUserId = {{ request.user.employee.id }};
+    {% else %}
+    // Pour les admins sans profil employé, utiliser le premier employé disponible
+    const currentUserId = 25; // Fatima ALAOUI comme exemple
+    {% endif %}
+    
+    if (currentUserId) {
+        fetch(`/api/leave/employee/${currentUserId}/balances/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateSoldesModalContent(data);
+            } else {
+                console.error('Erreur API soldes:', data.error);
+                document.getElementById('soldesModalBody').innerHTML = 
+                    '<div class="alert alert-warning">Impossible de charger les soldes: ' + (data.error || 'Erreur inconnue') + '</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur chargement soldes:', error);
+            document.getElementById('soldesModalBody').innerHTML = 
+                '<div class="alert alert-danger">Erreur de connexion</div>';
+        });
+    } else {
+        document.getElementById('soldesModalBody').innerHTML = 
+            '<div class="alert alert-info">Aucun profil employé associé</div>';
+    }
+}
+
+// Mettre à jour le contenu de la modal soldes
+function updateSoldesModalContent(data) {
+    const modalBody = document.getElementById('soldesModalBody');
+    
+    let html = `
+        <div class="row mb-3">
+            <div class="col-12">
+                <h6 class="text-muted">Employé: ${data.employe.prenom} ${data.employe.nom}</h6>
+                <small class="text-muted">Année: ${data.annee}</small>
+            </div>
+        </div>
+        <div class="row">
+    `;
+    
+    if (data.soldes && Object.keys(data.soldes).length > 0) {
+        for (const [typeConge, solde] of Object.entries(data.soldes)) {
+            const progressPercent = solde.jours_acquis > 0 
+                ? Math.round((solde.jours_pris / solde.jours_acquis) * 100) 
+                : 0;
+            
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card border-left-primary h-100">
+                        <div class="card-body">
+                            <h6 class="card-title text-primary">${typeConge}</h6>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="text-success">
+                                        <strong>${solde.jours_acquis}</strong>
+                                        <small class="d-block">Acquis</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-warning">
+                                        <strong>${solde.jours_pris}</strong>
+                                        <small class="d-block">Pris</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-info">
+                                        <strong>${solde.jours_restants}</strong>
+                                        <small class="d-block">Restants</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="progress mt-2" style="height: 8px;">
+                                <div class="progress-bar bg-warning" style="width: ${progressPercent}%"></div>
+                            </div>
+                            <small class="text-muted">${progressPercent}% utilisé</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } else {
+        html += '<div class="col-12"><div class="alert alert-info">Aucun solde disponible</div></div>';
+    }
+    
+    html += '</div>';
+    modalBody.innerHTML = html;
+}
+
+// Mettre à jour les infos du type de congé
+function updateTypeCongeInfo() {
+    const select = document.getElementById('type_conge');
+    const selectedOption = select.options[select.selectedIndex];
+    const infoDiv = document.getElementById('typeCongeInfo');
+    const justificatifSection = document.getElementById('justificatifSection');
+    
+    if (selectedOption.value) {
+        const maxJours = selectedOption.dataset.maxJours;
+        const justificatifRequis = selectedOption.dataset.justificatif === 'true';
+        
+        let infoText = '';
+        if (maxJours > 0) {
+            infoText += `Maximum ${maxJours} jours par an. `;
+        }
+        if (justificatifRequis) {
+            infoText += 'Justificatif requis.';
+            justificatifSection.classList.remove('d-none');
+        } else {
+            justificatifSection.classList.add('d-none');
+        }
+        
+        infoDiv.textContent = infoText;
+        infoDiv.classList.remove('d-none');
+    } else {
+        infoDiv.classList.add('d-none');
+        justificatifSection.classList.add('d-none');
+    }
+}
+
+// Calculer la durée
+function calculateDuration() {
+    const dateDebut = document.getElementById('date_debut').value;
+    const dateFin = document.getElementById('date_fin').value;
+    
+    if (dateDebut && dateFin) {
+        const debut = new Date(dateDebut);
+        const fin = new Date(dateFin);
+        
+        if (fin >= debut) {
+            const joursCalendaires = Math.ceil((fin - debut) / (1000 * 60 * 60 * 24)) + 1;
+            const joursOuvrables = calculateWorkingDays(debut, fin);
+            
+            document.getElementById('joursCalendaires').textContent = joursCalendaires;
+            document.getElementById('joursOuvrables').textContent = joursOuvrables;
+            document.getElementById('durationInfo').classList.remove('d-none');
+            
+            // Validation temps réel
+            validateDatesRealTime(dateDebut, dateFin);
+        } else {
+            document.getElementById('durationInfo').classList.add('d-none');
+        }
+    }
+}
+
+// Calculer jours ouvrables (exclut weekends)
+function calculateWorkingDays(startDate, endDate) {
+    let count = 0;
+    const current = new Date(startDate);
+    
+    while (current <= endDate) {
+        const dayOfWeek = current.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Pas dimanche (0) ni samedi (6)
+            count++;
+        }
+        current.setDate(current.getDate() + 1);
+    }
+    
+    return count;
+}
+
+// Validation en temps réel
+async function validateDatesRealTime(dateDebut, dateFin) {
+    const typeConge = document.getElementById('type_conge').value;
+    
+    if (!typeConge) return;
+    
+    try {
+        const response = await fetch('/api/leave/validate-dates/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                employe_id: currentEmployeId,
+                type_conge_id: typeConge,
+                date_debut: dateDebut,
+                date_fin: dateFin
+            })
+        });
+        
+        const data = await response.json();
+        
+        const messagesDiv = document.getElementById('validationMessages');
+        messagesDiv.innerHTML = '';
+        
+        // Afficher erreurs
+        if (data.erreurs && data.erreurs.length > 0) {
+            data.erreurs.forEach(erreur => {
+                messagesDiv.innerHTML += `
+                    <div class="alert alert-danger alert-sm">
+                        <i class="fas fa-exclamation-triangle me-2"></i>${erreur}
+                    </div>
+                `;
+            });
+        }
+        
+        // Afficher warnings
+        if (data.warnings && data.warnings.length > 0) {
+            data.warnings.forEach(warning => {
+                messagesDiv.innerHTML += `
+                    <div class="alert alert-warning alert-sm">
+                        <i class="fas fa-exclamation-circle me-2"></i>${warning}
+                    </div>
+                `;
+            });
+        }
+        
+        // Afficher info solde
+        if (data.valide && data.solde_apres !== null) {
+            messagesDiv.innerHTML += `
+                <div class="alert alert-info alert-sm">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Solde après congé: ${data.solde_apres} jours
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('Erreur validation:', error);
+    }
+}
+
+// Soumettre nouvelle demande
+async function submitNewRequest() {
+    const form = document.getElementById('newRequestForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const formData = {
+        employe_id: currentEmployeId,
+        type_conge_id: document.getElementById('type_conge').value,
+        date_debut: document.getElementById('date_debut').value,
+        date_fin: document.getElementById('date_fin').value,
+        motif: document.getElementById('motif').value,
+        priorite: document.getElementById('priorite').value
+    };
+    
+    try {
+        const response = await fetch('/api/leave/create/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(`Demande ${data.numero_demande} créée avec succès !`, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('newRequestModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            let errorMsg = 'Erreurs de validation:\n';
+            data.erreurs.forEach(erreur => errorMsg += '• ' + erreur + '\n');
+            showAlert(errorMsg, 'danger');
+        }
+    } catch (error) {
+        showAlert('Erreur réseau: ' + error.message, 'danger');
+    }
+}
+
+// Voir détail d'une demande
+async function viewRequestDetail(requestId) {
+    try {
+        // Charger détail (à implémenter dans API)
+        const content = `
+            <div class="text-center py-4">
+                <i class="fas fa-info-circle fa-3x text-info mb-3"></i>
+                <p>Détail de la demande #${requestId}</p>
+                <p class="text-muted">Fonctionnalité en cours de développement</p>
+            </div>
+        `;
+        
+        document.getElementById('detailRequestContent').innerHTML = content;
+        new bootstrap.Modal(document.getElementById('detailRequestModal')).show();
+    } catch (error) {
+        showAlert('Erreur chargement détail', 'danger');
+    }
+}
+
+// Modifier une demande
+function editRequest(requestId) {
+    showAlert('Modification en cours de développement', 'info');
+}
+
+// Annuler une demande
+async function cancelRequest(requestId) {
+    if (!confirm('Êtes-vous sûr de vouloir annuler cette demande ?')) return;
+    
+    try {
+        const response = await fetch(`/api/leave/${requestId}/cancel/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert('Demande annulée avec succès', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert('Erreur: ' + data.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Erreur réseau: ' + error.message, 'danger');
+    }
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // Vue par défaut
+    toggleView('table');
+    
+    // Validation date fin >= date début
+    document.getElementById('date_debut').addEventListener('change', function() {
+        document.getElementById('date_fin').min = this.value;
+    });
+});
+</script>
+
+<style>
+.border-left-primary { border-left: 4px solid #007bff !important; }
+.border-left-warning { border-left: 4px solid #ffc107 !important; }
+.border-left-success { border-left: 4px solid #28a745 !important; }
+.border-left-info { border-left: 4px solid #17a2b8 !important; }
+.border-left-danger { border-left: 4px solid #dc3545 !important; }
+
+.alert-sm {
+    padding: 0.375rem 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.type-conge-indicator {
+    flex-shrink: 0;
+}
+
+.card.h-100 {
+    height: calc(100% - 1rem) !important;
+}
+
+.btn-group .btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+</style>

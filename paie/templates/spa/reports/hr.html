@@ -1,0 +1,134 @@
+
+{% extends "base_spa.html" %}
+
+{% block title %}Analytics RH - PaiePro{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fas fa-users me-2"></i>Analytics Ressources Humaines</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Répartition par Département</h6>
+                    <canvas id="departmentChart" height="300"></canvas>
+                </div>
+                <div class="col-md-6">
+                    <h6>Évolution des Effectifs</h6>
+                    <canvas id="effectifsChart" height="300"></canvas>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6>Indicateurs RH</h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="hr-metric">
+                                <div class="metric-value">8.5%</div>
+                                <div class="metric-label">Turnover</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="hr-metric">
+                                <div class="metric-value">3.2 ans</div>
+                                <div class="metric-label">Ancienneté Moyenne</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="hr-metric">
+                                <div class="metric-value">32.4 ans</div>
+                                <div class="metric-label">Âge Moyen</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="hr-metric">
+                                <div class="metric-value">1.2</div>
+                                <div class="metric-label">Ratio H/F</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    cleanupSPAPage('reports-hr');
+    
+    if (!isSPAPageInitialized('reports-hr')) {
+        initHRReports();
+        markSPAPageInitialized('reports-hr');
+    }
+});
+
+function initHRReports() {
+    console.log('Initialisation analytics RH');
+    
+    // Graphique départements
+    const deptCtx = document.getElementById('departmentChart').getContext('2d');
+    const departmentChart = new Chart(deptCtx, {
+        type: 'pie',
+        data: {
+            labels: ['IT', 'RH', 'Finance', 'Commercial', 'Production'],
+            datasets: [{
+                data: [12, 5, 8, 10, 10],
+                backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    // Graphique évolution effectifs
+    const effCtx = document.getElementById('effectifsChart').getContext('2d');
+    const effectifsChart = new Chart(effCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
+            datasets: [{
+                label: 'Effectifs',
+                data: [40, 42, 41, 43, 44, 45],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    registerChart('reports-hr', 'departmentChart', departmentChart);
+    registerChart('reports-hr', 'effectifsChart', effectifsChart);
+}
+</script>
+
+<style>
+.hr-metric {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #007bff;
+}
+.metric-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+</style>
+
+{% endblock %}

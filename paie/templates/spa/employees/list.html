@@ -1,0 +1,611 @@
+<!-- ...en-tête supprimé... -->
+<!-- templates/spa/employees/list.html - Template employés minimal -->
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-users text-primary me-2"></i>Gestion des Employés
+            </h1>
+            <p class="text-muted">Gérez votre équipe et les informations RH</p>
+        </div>
+        <div>
+            <button class="btn btn-primary" id="btn-create-employee">
+                <i class="fas fa-plus me-2"></i>Nouvel Employé
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ employees.paginator.count|default:0 }}</h4>
+                            <small>Employés Actifs</small>
+                        </div>
+                        <i class="fas fa-users fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ sites.count|default:0 }}</h4>
+                            <small>Sites</small>
+                        </div>
+                        <i class="fas fa-building fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ departments.count|default:0 }}</h4>
+                            <small>Départements</small>
+                        </div>
+                        <i class="fas fa-sitemap fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">3,250</h4>
+                            <small>Salaire Moyen (MAD)</small>
+                        </div>
+                        <i class="fas fa-coins fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres de recherche -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3" id="filter-form">
+                <div class="col-md-4">
+                    <label class="form-label">Rechercher</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" name="search" 
+                               value="{{ search }}" placeholder="Nom, prénom, matricule...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Site</label>
+                    <select class="form-select" name="site">
+                        <option value="">Tous les sites</option>
+                        {% for site in sites %}
+                            <option value="{{ site.id }}" 
+                                {% if request.GET.site == site.id|stringformat:"s" %}selected{% endif %}>
+                                {{ site.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Département</label>
+                    <select class="form-select" name="department">
+                        <option value="">Tous les départements</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}"
+                                {% if request.GET.department == dept.id|stringformat:"s" %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="fas fa-filter me-1"></i>Filtrer
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des employés -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>Liste des Employés
+                {% if employees.paginator.count %}
+                    <span class="badge bg-primary ms-2">{{ employees.paginator.count }}</span>
+                {% endif %}
+            </h5>
+            <!-- DEBUG: Affiche les valeurs de filtre et le nombre d'employés trouvés -->
+            <div class="alert alert-info p-2 mb-0" style="font-size:0.95em;">
+                <strong>DEBUG:</strong>
+                search = "{{ search }}" |
+                site = "{{ request.GET.site }}" |
+                department = "{{ request.GET.department }}" |
+                employés trouvés = {{ employees.paginator.count }}
+            </div>
+            <div class="btn-group btn-group-sm">
+                <button class="btn btn-outline-success" onclick="exportEmployees('excel')">
+                    <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+                <button class="btn btn-outline-danger" onclick="exportEmployees('pdf')">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if employees %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Employé</th>
+                                <th>Contact</th>
+                                <th>Poste</th>
+                                <th>Salaire</th>
+                                <th>Site/Département</th>
+                                <th>Ancienneté</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employee in employees %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                             style="width: 40px; height: 40px; min-width: 40px;">
+                                            <strong>{{ employee.first_name.0 }}{{ employee.last_name.0 }}</strong>
+                                        </div>
+                                        <div>
+                                            <strong>{{ employee.full_name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ employee.matricule }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <a href="mailto:{{ employee.email }}" class="text-decoration-none">
+                                            <i class="fas fa-envelope text-primary me-1"></i>{{ employee.email }}
+                                        </a>
+                                    </div>
+                                    {% if employee.phone %}
+                                    <div class="mt-1">
+                                        <a href="tel:{{ employee.phone }}" class="text-decoration-none">
+                                            <i class="fas fa-phone text-success me-1"></i>{{ employee.phone }}
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ employee.position }}</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        Depuis {{ employee.hire_date|date:"d/m/Y" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong class="text-success">{{ employee.salary|floatformat:2 }} MAD</strong>
+                                    <br>
+                                    <small class="text-muted">{{ employee.regime_horaire }}</small>
+                                </td>
+                                <td>
+                                    <div>
+                                        {% if employee.site %}
+                                            <i class="fas fa-building text-primary me-1"></i>
+                                            <strong>{{ employee.site.name }}</strong>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="mt-1">
+                                        {% if employee.department %}
+                                            <i class="fas fa-users text-info me-1"></i>
+                                            {{ employee.department.name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>{{ employee.years_of_service }}</strong> ans
+                                    <br>
+                                    <small class="text-muted">
+                                        {% if employee.years_of_service >= 5 %}
+                                            <i class="fas fa-star text-warning"></i> Senior
+                                        {% elif employee.years_of_service >= 2 %}
+                                            <i class="fas fa-user-tie text-info"></i> Confirmé
+                                        {% else %}
+                                            <i class="fas fa-user-plus text-success"></i> Junior
+                                        {% endif %}
+                                    </small>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/admin/paie/employee/{{ employee.id }}/change/" class="btn btn-outline-info btn-sm" title="Voir le profil">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="/admin/paie/employee/{{ employee.id }}/change/" class="btn btn-outline-warning btn-sm" title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="/admin/paie/employee/{{ employee.id }}/delete/" class="btn btn-outline-danger btn-sm" title="Supprimer">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if employees.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Navigation employés">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            {% if employees.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ employees.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in employees.paginator.page_range %}
+                                {% if employees.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > employees.number|add:'-3' and num < employees.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if employees.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ employees.next_page_number }}{% if search %}&search={{ search }}{% endif %}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <!-- État vide -->
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">Aucun employé trouvé</h5>
+                    <p class="text-muted mb-4">
+                        {% if search or request.GET.site or request.GET.department %}
+                            Aucun employé ne correspond à vos critères de recherche.
+                            <br>
+                            <a href="/spa/employees/list/" class="text-decoration-none">
+                                Afficher tous les employés
+                            </a>
+                        {% else %}
+                            Commencez par ajouter votre premier employé.
+                        {% endif %}
+                    </p>
+                    <button class="btn btn-primary" id="btn-create-first-employee">
+                        <i class="fas fa-plus me-2"></i>Ajouter un employé
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// CSRF helper to get token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+// Initialisation SPA pour la section employés
+window.initSection = function(section) {
+    if (section !== 'employees') return;
+    console.log('Employee list page loaded');
+    // Gestionnaire pour bouton créer employé (principal et état vide)
+    $(document).off('click', '#btn-create-employee, #btn-create-first-employee')
+        .on('click', '#btn-create-employee, #btn-create-first-employee', function() {
+            console.log('Create employee button clicked');
+            createEmployeeModal();
+        });
+    // Gestionnaire pour suppression avec confirmation et rafraîchissement automatique
+    $(document).off('click', '.js-delete-employee')
+        .on('click', '.js-delete-employee', function(e) {
+            e.preventDefault();
+            const url = $(this).data('url');
+            const name = $(this).data('name');
+            if (confirm(`Êtes-vous sûr de vouloir supprimer l'employé "${name}" ?`)) {
+                window.deleteEmployee(url); // utilise la fonction globale
+            }
+        });
+    // Gestionnaire pour voir le profil d'un employé
+    $(document).off('click', '.js-view-employee')
+        .on('click', '.js-view-employee', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            // Redirige vers la page d'édition Django Admin pour afficher les détails
+            window.location.href = `/admin/paie/employee/${id}/change/`;
+        });
+    // Gestionnaire pour modifier un employé
+    $(document).off('click', '.js-update-employee')
+        .on('click', '.js-update-employee', function(e) {
+            e.preventDefault();
+            const id = $(this).data('id');
+            // Redirige vers la page d'édition Django Admin
+            window.location.href = `/admin/paie/employee/${id}/change/`;
+        });
+    // Logique de filtre SPA fiable : un seul gestionnaire submit AJAX
+    $(document).off('submit', '#filter-form').on('submit', '#filter-form', function(e) {
+        e.preventDefault();
+        const url = '/spa/employees/list/?' + $(this).serialize();
+        loadContent(url, 'employees');
+    });
+// Fonction SPA robuste pour charger dynamiquement une section (ex: employés)
+function loadContent(url, section) {
+    $('#main-content').addClass('opacity-50');
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function (data) {
+            // Vérifie que la réponse contient bien la section employés
+            if (typeof data === 'string' && data.includes('Gestion des Employés')) {
+                $('#main-content').html(data);
+                if (window.initSection) window.initSection(section);
+            } else {
+                showAlert('danger', "Erreur lors du chargement de la section employés.");
+            }
+        },
+        error: function () {
+            showAlert('danger', "Erreur serveur lors du chargement.");
+        },
+        complete: function () {
+        $('#main-content').removeClass('opacity-50');
+        }
+    });
+}
+}
+// Fonction pour afficher le modal de création d'employé
+function createEmployeeModal() {
+    let modalHtml = `
+        <div class="modal fade" id="employeeCreateModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Créer un nouvel employé</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="employeeCreateForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nom</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Prénom</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Téléphone</label>
+                            <input type="text" class="form-control" name="phone">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Salaire</label>
+                            <input type="number" class="form-control" name="salary" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Poste</label>
+                            <input type="text" class="form-control" name="position">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date d'embauche</label>
+                            <input type="date" class="form-control" name="hire_date" max="${new Date().toISOString().split('T')[0]}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Situation familiale</label>
+                            <select class="form-select" name="situation_familiale" required>
+                                <option value="">Sélectionner</option>
+                                <option value="CELIBATAIRE">Célibataire</option>
+                                <option value="MARIE">Marié(e)</option>
+                                <option value="DIVORCE">Divorcé(e)</option>
+                                <option value="VEUF">Veuf(ve)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Enfants à charge</label>
+                            <input type="number" class="form-control" name="nb_enfants_charge" min="0" max="10" value="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Régime horaire</label>
+                            <select class="form-select" name="regime_horaire" required>
+                                <option value="">Sélectionner</option>
+                                <option value="TEMPS_PLEIN">Temps plein</option>
+                                <option value="TEMPS_PARTIEL">Temps partiel</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Heures/semaine</label>
+                            <input type="number" class="form-control" name="nb_heures_semaine" min="0" max="99" step="0.5" value="44" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Site</label>
+                            <select class="form-select" name="site" required>
+                                <option value="">Sélectionner un site</option>
+                                {% for site in sites %}
+                                    <option value="{{ site.id }}">{{ site.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Département</label>
+                            <select class="form-select" name="department" required>
+                                <option value="">Sélectionner un département</option>
+                                {% for dept in departments %}
+                                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div id="employeeCreateError" class="alert alert-danger d-none"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Créer</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>`;
+    $('#employeeCreateModal').remove();
+    $('body').append(modalHtml);
+    var modal = new bootstrap.Modal(document.getElementById('employeeCreateModal'));
+    modal.show();
+    // Gestion de la soumission du formulaire
+    $('#employeeCreateForm').on('submit', function(e) {
+        e.preventDefault();
+        // Correction: envoyer les IDs pour site et department, ou vide si non sélectionné
+        const data = $(this).serializeArray();
+        let payload = {};
+        data.forEach(function(item) {
+            payload[item.name] = item.value;
+        });
+        // Si site/department vides, les supprimer pour éviter erreur
+        if (!payload.site) delete payload.site;
+        if (!payload.department) delete payload.department;
+        // Debug: Afficher les données envoyées
+        console.log('Données envoyées:', payload);
+        console.log('CSRF Token:', getCookie('csrftoken'));
+        
+        $.ajax({
+            url: '/api/employees/create/',
+            type: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            data: payload,
+            success: function(response) {
+                console.log('Réponse du serveur:', response);
+                if (response.form_is_valid) {
+                    modal.hide();
+                    showAlert('success', response.message || 'Employé créé avec succès');
+                    // Rafraîchir la liste des employés via SPA
+                    setTimeout(function() { loadContent('/spa/employees/list/', 'employees'); }, 500);
+                } else {
+                    console.log('Erreurs de formulaire:', response);
+                    let msg = response.message || 'Erreur lors de la création';
+                    
+                    // Afficher les erreurs de validation détaillées
+                    if (response.errors) {
+                        console.log('Erreurs détaillées:', response.errors);
+                        let errorList = '<ul>';
+                        for (const [field, errors] of Object.entries(response.errors)) {
+                            errorList += `<li><strong>${field}:</strong> ${Array.isArray(errors) ? errors.join(', ') : errors}</li>`;
+                        }
+                        errorList += '</ul>';
+                        msg = 'Erreurs de validation:' + errorList;
+                    }
+                    
+                    $('#employeeCreateError').removeClass('d-none').html(msg);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Erreur AJAX:', xhr, status, error);
+                console.log('Réponse complète:', xhr.responseText);
+                let msg = 'Erreur serveur (' + xhr.status + ')';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                } else if (xhr.responseText) {
+                    msg += ': ' + xhr.responseText.substring(0, 200);
+                }
+                $('#employeeCreateError').removeClass('d-none').html(msg);
+            }
+        });
+    });
+}
+
+    // Gestionnaires d'événements pour cette page
+    $(document).ready(function() {
+        // Fonction de suppression d'employé exposée globalement
+        window.deleteEmployee = function(url) {
+            console.log('Deleting employee:', url);
+            $.ajax({
+                url: url,
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('success', response.message);
+                        // Rafraîchir automatiquement la liste des employés via SPA
+                        setTimeout(function() { loadContent('/spa/employees/list/', 'employees'); }, 500);
+                    } else {
+                        showAlert('danger', 'Erreur de suppression');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Erreur suppression:', error);
+                    showAlert('danger', 'Erreur de suppression: ' + error);
+                }
+            });
+        }
+
+        // Fonctions pour les actions supplémentaires
+        function exportEmployees(format) {
+            showAlert('info', 'Export en cours en format: ' + format);
+            // TODO: Implémenter l'export
+        }
+
+        // Fonction utilitaire showAlert définie localement si pas disponible globalement
+        if (typeof showAlert === 'undefined') {
+            function showAlert(type, message) {
+                const alertHtml = `
+                    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                $('#content').prepend(alertHtml);
+                
+                // Auto-hide après 5 secondes
+                setTimeout(() => $('.alert').fadeOut(), 5000);
+            }
+        }
+        // Appel initial pour attacher les gestionnaires d'action sur la page employees
+        if (window.initSection) {
+            window.initSection('employees');
+        }
+    });
+</script>

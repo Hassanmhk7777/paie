@@ -1,0 +1,82 @@
+
+{% extends "base_spa.html" %}
+
+{% block title %}Gestion des Horaires - PaiePro{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4><i class="fas fa-calendar-alt me-2"></i>Gestion des Horaires et Plannings</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Plages Horaires</h6>
+                    <div id="plages-horaires">
+                        <div class="text-center">Chargement...</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6>Planning de la Semaine</h6>
+                    <div id="planning-semaine">
+                        <div class="text-center">Chargement...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    cleanupSPAPage('schedules');
+    
+    if (!isSPAPageInitialized('schedules')) {
+        initSchedules();
+        markSPAPageInitialized('schedules');
+    }
+});
+
+function initSchedules() {
+    console.log('Initialisation gestion horaires');
+    loadScheduleData();
+}
+
+function loadScheduleData() {
+    // Simulation de données
+    const plagesHTML = `
+        <div class="list-group">
+            <div class="list-group-item">
+                <strong>Horaire Standard</strong><br>
+                <small>08:00 - 17:00 (Lu-Ve)</small>
+            </div>
+            <div class="list-group-item">
+                <strong>Horaire Flexible</strong><br>
+                <small>07:00 - 16:00 / 09:00 - 18:00</small>
+            </div>
+        </div>
+    `;
+    
+    const planningHTML = `
+        <table class="table table-sm">
+            <thead>
+                <tr><th>Jour</th><th>Horaire</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Lundi</td><td>08:00 - 17:00</td></tr>
+                <tr><td>Mardi</td><td>08:00 - 17:00</td></tr>
+                <tr><td>Mercredi</td><td>08:00 - 17:00</td></tr>
+                <tr><td>Jeudi</td><td>08:00 - 17:00</td></tr>
+                <tr><td>Vendredi</td><td>08:00 - 17:00</td></tr>
+            </tbody>
+        </table>
+    `;
+    
+    $('#plages-horaires').html(plagesHTML);
+    $('#planning-semaine').html(planningHTML);
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Collect static files and run Django dev server",
+			"command": "python manage.py collectstatic --noinput; python manage.py runserver 0.0.0.0:8000",
+			"args": [],
+			"isBackground": true,
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}

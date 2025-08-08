@@ -1,0 +1,1121 @@
+{% load static %}
+
+<!-- Statistiques Paie Module -->
+<div class="statistics-module" id="payroll-statistics">
+    <!-- Header avec titre et description -->
+    <div class="stats-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="stats-title">
+                    <i class="fas fa-chart-line text-primary me-3"></i>
+                    Statistiques & Analytics Paie
+                </h2>
+                <p class="stats-description text-muted">
+                    Tableau de bord complet pour analyser les performances et tendances de votre système de paie
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="stats-period-badge">
+                    <i class="fas fa-calendar me-2"></i>
+                    <span>{{ periode_debut|date:"M Y" }} - {{ periode_fin|date:"M Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres dynamiques -->
+    <div class="stats-filters mb-4">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Période</label>
+                <select class="form-select" id="periode-filter" onchange="updateFilters()">
+                    <option value="1_mois" {% if periode_filter == '1_mois' %}selected{% endif %}>Mois actuel</option>
+                    <option value="3_mois" {% if periode_filter == '3_mois' %}selected{% endif %}>3 derniers mois</option>
+                    <option value="6_mois" {% if periode_filter == '6_mois' %}selected{% endif %}>6 derniers mois</option>
+                    <option value="12_mois" {% if periode_filter == '12_mois' %}selected{% endif %}>12 derniers mois</option>
+                    <option value="custom" {% if periode_filter == 'custom' %}selected{% endif %}>Période personnalisée</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Département</label>
+                <select class="form-select" id="departement-filter" onchange="updateFilters()">
+                    <option value="">Tous les départements</option>
+                    {% for dept in departements_list %}
+                        <option value="{{ dept }}" {% if departement_filter == dept %}selected{% endif %}>{{ dept }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2" id="date-debut-col" {% if periode_filter != 'custom' %}style="display: none;"{% endif %}>
+                <label class="form-label">Date début</label>
+                <input type="date" class="form-control" id="date-debut" value="{{ date_debut_custom }}" onchange="updateFilters()">
+            </div>
+            <div class="col-md-2" id="date-fin-col" {% if periode_filter != 'custom' %}style="display: none;"{% endif %}>
+                <label class="form-label">Date fin</label>
+                <input type="date" class="form-control" id="date-fin" value="{{ date_fin_custom }}" onchange="updateFilters()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label d-block">&nbsp;</label>
+                <button class="btn btn-primary" onclick="exportStatistics()">
+                    <i class="fas fa-download me-2"></i>Export PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs Principaux (6 cartes) -->
+    <div class="kpis-grid mb-4">
+        <div class="row g-3">
+            <!-- Masse Salariale Totale -->
+            <div class="col-lg-4 col-md-6">
+                <div class="kpi-card kpi-primary">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="kpi-trend kpi-trend-{{ kpis.masse_salariale.type }}">
+                            {% if kpis.masse_salariale.type == 'increase' %}
+                                <i class="fas fa-arrow-up"></i>
+                            {% elif kpis.masse_salariale.type == 'decrease' %}
+                                <i class="fas fa-arrow-down"></i>
+                            {% else %}
+                                <i class="fas fa-arrow-right"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value">{{ kpis.masse_salariale.valeur|floatformat:0 }} MAD</h3>
+                        <p class="kpi-label">Masse Salariale Totale</p>
+                        <div class="kpi-variation">
+                            {% if kpis.masse_salariale.variation > 0 %}
+                                <span class="text-success">+{{ kpis.masse_salariale.variation|floatformat:1 }}%</span>
+                            {% elif kpis.masse_salariale.variation < 0 %}
+                                <span class="text-danger">{{ kpis.masse_salariale.variation|floatformat:1 }}%</span>
+                            {% else %}
+                                <span class="text-muted">Stable</span>
+                            {% endif %}
+                            <small class="text-muted ms-1">vs mois précédent</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employés Actifs -->
+            <div class="col-lg-4 col-md-6">
+                <div class="kpi-card kpi-success">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="kpi-trend kpi-trend-info">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value">{{ kpis.employes_actifs.valeur }}</h3>
+                        <p class="kpi-label">Employés Actifs</p>
+                        <div class="kpi-variation">
+                            <span class="text-info">+{{ kpis.employes_actifs.nouveaux }}</span>
+                            <small class="text-muted ms-1">nouveaux employés</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulletins Traités -->
+            <div class="col-lg-4 col-md-6">
+                <div class="kpi-card kpi-info">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="kpi-trend kpi-trend-success">
+                            <i class="fas fa-check"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value">{{ kpis.bulletins_traites.valeur }}</h3>
+                        <p class="kpi-label">Bulletins Traités</p>
+                        <div class="kpi-variation">
+                            <span class="text-success">{{ kpis.bulletins_traites.taux_reussite|floatformat:1 }}%</span>
+                            <small class="text-muted ms-1">taux de réussite</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temps Moyen de Traitement -->
+            <div class="col-lg-4 col-md-6">
+                <div class="kpi-card kpi-warning">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="kpi-trend kpi-trend-{{ kpis.temps_traitement.type }}">
+                            {% if kpis.temps_traitement.type == 'decrease' %}
+                                <i class="fas fa-arrow-down"></i>
+                            {% else %}
+                                <i class="fas fa-arrow-up"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value">{{ kpis.temps_traitement.valeur|floatformat:1 }}h</h3>
+                        <p class="kpi-label">Temps Moyen de Traitement</p>
+                        <div class="kpi-variation">
+                            {% if kpis.temps_traitement.evolution < 0 %}
+                                <span class="text-success">{{ kpis.temps_traitement.evolution|floatformat:1 }}h</span>
+                            {% else %}
+                                <span class="text-warning">+{{ kpis.temps_traitement.evolution|floatformat:1 }}h</span>
+                            {% endif %}
+                            <small class="text-muted ms-1">évolution</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Taux d'Absentéisme -->
+            <div class="col-lg-4 col-md-6">
+                <div class="kpi-card kpi-danger">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <div class="kpi-trend kpi-trend-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value">{{ kpis.taux_absenteisme.valeur|floatformat:1 }}%</h3>
+                        <p class="kpi-label">Taux d'Absentéisme</p>
+                        <div class="kpi-variation">
+                            <span class="text-warning">+{{ kpis.taux_absenteisme.variation|floatformat:1 }}%</span>
+                            <small class="text-muted ms-1">variation</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coût Moyen par Employé -->
+            <div class="col-lg-4 col-md-6">
+                <div class="kpi-card kpi-secondary">
+                    <div class="kpi-header">
+                        <div class="kpi-icon">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                        <div class="kpi-trend kpi-trend-{{ kpis.cout_moyen.type }}">
+                            {% if kpis.cout_moyen.type == 'increase' %}
+                                <i class="fas fa-arrow-up"></i>
+                            {% else %}
+                                <i class="fas fa-arrow-down"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="kpi-content">
+                        <h3 class="kpi-value">{{ kpis.cout_moyen.valeur|floatformat:0 }} MAD</h3>
+                        <p class="kpi-label">Coût Moyen par Employé</p>
+                        <div class="kpi-variation">
+                            {% if kpis.cout_moyen.tendance > 0 %}
+                                <span class="text-warning">+{{ kpis.cout_moyen.tendance|floatformat:0 }}</span>
+                            {% else %}
+                                <span class="text-success">{{ kpis.cout_moyen.tendance|floatformat:0 }}</span>
+                            {% endif %}
+                            <small class="text-muted ms-1">MAD</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Graphiques (2 zones) -->
+    <div class="charts-section mb-4">
+        <div class="row g-4">
+            <!-- Graphique linéaire : Évolution masse salariale -->
+            <div class="col-lg-8">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Évolution Masse Salariale (12 mois)
+                        </h4>
+                        <div class="chart-controls">
+                            <button class="btn btn-sm btn-outline-primary" onclick="toggleChartView('line')">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="toggleChartView('bar')">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="evolutionChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphique secteurs : Répartition par département -->
+            <div class="col-lg-4">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Répartition par Département
+                        </h4>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="repartitionChart" width="300" height="300"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        {% for label in dept_labels %}
+                            <div class="legend-item">
+                                <span class="legend-color" style="background-color: {{ dept_colors|slice:forloop.counter0|slice:":1" }}"></span>
+                                <span class="legend-label">{{ label }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableaux Détaillés (4 sections) -->
+    <div class="detailed-tables">
+        <div class="row g-4">
+            <!-- Indicateurs RH -->
+            <div class="col-lg-6">
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h4 class="detail-title">
+                            <i class="fas fa-users-cog me-2"></i>
+                            Indicateurs RH
+                        </h4>
+                    </div>
+                    <div class="detail-content">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value">{{ indicateurs_rh.turnover }}%</div>
+                                    <div class="metric-label">Turnover</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value">{{ indicateurs_rh.anciennete_moyenne }} ans</div>
+                                    <div class="metric-label">Ancienneté Moyenne</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value">{{ indicateurs_rh.age_moyen }} ans</div>
+                                    <div class="metric-label">Âge Moyen</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value">{{ indicateurs_rh.ratio_hf }}</div>
+                                    <div class="metric-label">Ratio H/F</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value text-success">+{{ indicateurs_rh.embauches_mois }}</div>
+                                    <div class="metric-label">Embauches</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value text-danger">-{{ indicateurs_rh.departs_mois }}</div>
+                                    <div class="metric-label">Départs</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charges Sociales -->
+            <div class="col-lg-6">
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h4 class="detail-title">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Charges Sociales
+                        </h4>
+                    </div>
+                    <div class="detail-content">
+                        <div class="charges-list">
+                            <div class="charge-item">
+                                <span class="charge-label">CNSS Patronale</span>
+                                <span class="charge-value">{{ charges_sociales.cnss_patronale|floatformat:0 }} MAD</span>
+                            </div>
+                            <div class="charge-item">
+                                <span class="charge-label">CNSS Salariale</span>
+                                <span class="charge-value">{{ charges_sociales.cnss_salariale|floatformat:0 }} MAD</span>
+                            </div>
+                            <div class="charge-item">
+                                <span class="charge-label">AMO</span>
+                                <span class="charge-value">{{ charges_sociales.amo|floatformat:0 }} MAD</span>
+                            </div>
+                            <div class="charge-item">
+                                <span class="charge-label">Formation Professionnelle</span>
+                                <span class="charge-value">{{ charges_sociales.formation|floatformat:0 }} MAD</span>
+                            </div>
+                            <div class="charge-item">
+                                <span class="charge-label">Accident du Travail</span>
+                                <span class="charge-value">{{ charges_sociales.accident_travail|floatformat:0 }} MAD</span>
+                            </div>
+                            <hr class="my-2">
+                            <div class="charge-item charge-total">
+                                <span class="charge-label"><strong>Total</strong></span>
+                                <span class="charge-value"><strong>{{ charges_sociales.total|floatformat:0 }} MAD</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Système -->
+            <div class="col-lg-6">
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h4 class="detail-title">
+                            <i class="fas fa-cogs me-2"></i>
+                            Performance Système
+                        </h4>
+                    </div>
+                    <div class="detail-content">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value text-success">{{ performance_systeme.bulletins_sans_erreur }}</div>
+                                    <div class="metric-label">Bulletins sans erreur</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value">{{ performance_systeme.temps_traitement_moyen }}</div>
+                                    <div class="metric-label">Temps traitement moyen</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value text-warning">{{ performance_systeme.erreurs_calcul }}</div>
+                                    <div class="metric-label">Erreurs</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-metric">
+                                    <div class="metric-value text-success">{{ performance_systeme.disponibilite }}%</div>
+                                    <div class="metric-label">Disponibilité</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Départements par coût -->
+            <div class="col-lg-6">
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h4 class="detail-title">
+                            <i class="fas fa-trophy me-2"></i>
+                            Top Départements par Coût
+                        </h4>
+                    </div>
+                    <div class="detail-content">
+                        <div class="top-departments">
+                            {% for dept in top_departements %}
+                                <div class="dept-item">
+                                    <div class="dept-rank">{{ forloop.counter }}</div>
+                                    <div class="dept-info">
+                                        <div class="dept-name">{{ dept.employe__department__name|default:"Non assigné" }}</div>
+                                        <div class="dept-stats">
+                                            <span class="dept-cost">{{ dept.masse|floatformat:0 }} MAD</span>
+                                            <span class="dept-count">{{ dept.effectif }} employé{{ dept.effectif|pluralize }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="dept-progress">
+                                        <div class="progress">
+                                            <div class="progress-bar" style="width: {% widthratio dept.masse kpis.masse_salariale.valeur 100 %}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<style>
+/* Variables CSS */
+:root {
+    --primary-blue: #4f68d8;
+    --success-green: #27ae60;
+    --warning-orange: #f39c12;
+    --danger-red: #e74c3c;
+    --info-blue: #3498db;
+    --secondary-gray: #6c757d;
+    --light-gray: #f8f9fa;
+    --border-color: #dee2e6;
+    --text-muted: #6c757d;
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --border-radius: 0.5rem;
+    --transition: all 0.3s ease;
+}
+
+/* Header statistiques */
+.stats-header {
+    background: linear-gradient(135deg, var(--primary-blue), #6366f1);
+    color: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+}
+
+.stats-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stats-description {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.stats-period-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1.5rem;
+    border-radius: 2rem;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+/* Filtres */
+.stats-filters {
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+/* KPIs Cards */
+.kpis-grid .kpi-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-blue);
+}
+
+.kpi-card.kpi-success::before { background: var(--success-green); }
+.kpi-card.kpi-warning::before { background: var(--warning-orange); }
+.kpi-card.kpi-danger::before { background: var(--danger-red); }
+.kpi-card.kpi-info::before { background: var(--info-blue); }
+.kpi-card.kpi-secondary::before { background: var(--secondary-gray); }
+
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.kpi-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    background: var(--primary-blue);
+}
+
+.kpi-primary .kpi-icon { background: var(--primary-blue); }
+.kpi-success .kpi-icon { background: var(--success-green); }
+.kpi-warning .kpi-icon { background: var(--warning-orange); }
+.kpi-danger .kpi-icon { background: var(--danger-red); }
+.kpi-info .kpi-icon { background: var(--info-blue); }
+.kpi-secondary .kpi-icon { background: var(--secondary-gray); }
+
+.kpi-trend {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: white;
+}
+
+.kpi-trend-increase { background: var(--success-green); }
+.kpi-trend-decrease { background: var(--danger-red); }
+.kpi-trend-stable { background: var(--secondary-gray); }
+.kpi-trend-info { background: var(--info-blue); }
+.kpi-trend-success { background: var(--success-green); }
+.kpi-trend-warning { background: var(--warning-orange); }
+
+.kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.kpi-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0.5rem 0;
+    font-weight: 500;
+}
+
+.kpi-variation {
+    font-size: 0.875rem;
+}
+
+/* Charts */
+.chart-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 0;
+}
+
+.chart-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.chart-container {
+    padding: 1.5rem;
+    position: relative;
+    height: 300px;
+}
+
+.chart-legend {
+    padding: 0 1.5rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+/* Detail Cards */
+.detail-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    height: 100%;
+}
+
+.detail-header {
+    padding: 1.5rem 1.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.detail-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+    padding-bottom: 1rem;
+}
+
+.detail-content {
+    padding: 0 1.5rem 1.5rem;
+}
+
+.detail-metric {
+    text-align: center;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.detail-metric:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+/* Charges Sociales */
+.charges-list {
+    space-y: 0.5rem;
+}
+
+.charge-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.charge-item:last-child {
+    border-bottom: none;
+}
+
+.charge-total {
+    background: var(--light-gray);
+    padding: 1rem;
+    margin: 0.5rem -1rem -1rem;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.charge-label {
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+.charge-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Top Départements */
+.top-departments {
+    space-y: 1rem;
+}
+
+.dept-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--light-gray);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.dept-item:hover {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-sm);
+}
+
+.dept-rank {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.dept-info {
+    flex: 1;
+}
+
+.dept-name {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.dept-stats {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.dept-cost {
+    color: var(--primary-blue);
+    font-weight: 600;
+}
+
+.dept-count {
+    color: var(--text-muted);
+}
+
+.dept-progress {
+    width: 4rem;
+}
+
+.dept-progress .progress {
+    height: 0.5rem;
+    background: #e2e8f0;
+    border-radius: 0.25rem;
+}
+
+.dept-progress .progress-bar {
+    background: var(--primary-blue);
+    border-radius: 0.25rem;
+    transition: width 0.6s ease;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-header {
+        text-align: center;
+    }
+    
+    .stats-period-badge {
+        margin-top: 1rem;
+        display: inline-block;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .kpi-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid var(--primary-blue);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<!-- JavaScript -->
+<script>
+// Variables globales pour les graphiques
+let evolutionChart;
+let repartitionChart;
+
+// Données des graphiques depuis le backend
+const evolutionData = {
+    labels: {{ evolution_labels|safe }},
+    values: {{ evolution_values|safe }}
+};
+
+const repartitionData = {
+    labels: {{ dept_labels|safe }},
+    values: {{ dept_values|safe }},
+    colors: {{ dept_colors|safe }}
+};
+
+// Initialisation des graphiques
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    
+    // Animation des cartes KPI
+    const kpiCards = document.querySelectorAll('.kpi-card');
+    kpiCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in');
+        }, index * 100);
+    });
+    
+    // Gestion du filtre période personnalisée
+    const periodeFilter = document.getElementById('periode-filter');
+    toggleCustomDates(periodeFilter.value === 'custom');
+    
+    periodeFilter.addEventListener('change', function() {
+        toggleCustomDates(this.value === 'custom');
+    });
+});
+
+// Initialisation des graphiques Chart.js
+function initializeCharts() {
+    // Graphique d'évolution (ligne)
+    const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
+    evolutionChart = new Chart(evolutionCtx, {
+        type: 'line',
+        data: {
+            labels: evolutionData.labels,
+            datasets: [{
+                label: 'Masse Salariale (MAD)',
+                data: evolutionData.values,
+                borderColor: '#4f68d8',
+                backgroundColor: 'rgba(79, 104, 216, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#4f68d8',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' MAD';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    hoverBackgroundColor: '#4f68d8'
+                }
+            }
+        }
+    });
+
+    // Graphique de répartition (secteurs)
+    const repartitionCtx = document.getElementById('repartitionChart').getContext('2d');
+    repartitionChart = new Chart(repartitionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: repartitionData.labels,
+            datasets: [{
+                data: repartitionData.values,
+                backgroundColor: repartitionData.colors,
+                borderWidth: 0,
+                cutout: '60%'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+// Basculer l'affichage des dates personnalisées
+function toggleCustomDates(show) {
+    const dateDebutCol = document.getElementById('date-debut-col');
+    const dateFinCol = document.getElementById('date-fin-col');
+    
+    if (show) {
+        dateDebutCol.style.display = 'block';
+        dateFinCol.style.display = 'block';
+    } else {
+        dateDebutCol.style.display = 'none';
+        dateFinCol.style.display = 'none';
+    }
+}
+
+// Changer le type de graphique
+function toggleChartView(type) {
+    if (evolutionChart) {
+        evolutionChart.config.type = type;
+        evolutionChart.update();
+    }
+}
+
+// Mettre à jour les filtres
+function updateFilters() {
+    const periode = document.getElementById('periode-filter').value;
+    const departement = document.getElementById('departement-filter').value;
+    const dateDebut = document.getElementById('date-debut').value;
+    const dateFin = document.getElementById('date-fin').value;
+    
+    // Construire l'URL avec les paramètres
+    const params = new URLSearchParams();
+    params.append('periode', periode);
+    if (departement) params.append('departement', departement);
+    if (periode === 'custom') {
+        if (dateDebut) params.append('date_debut', dateDebut);
+        if (dateFin) params.append('date_fin', dateFin);
+    }
+    
+    // Recharger la page avec les nouveaux filtres
+    const url = `/spa/payroll/statistics/?${params.toString()}`;
+    
+    // Utiliser AJAX pour recharger le contenu
+    $.ajax({
+        url: url,
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(data) {
+            $('#main-content').html(data);
+            // Réinitialiser les graphiques
+            if (typeof initializeCharts === 'function') {
+                initializeCharts();
+            }
+        },
+        error: function() {
+            showNotification('Erreur lors du chargement des données', 'error');
+        }
+    });
+}
+
+// Exporter les statistiques en PDF
+function exportStatistics() {
+    // Simulation de l'export - à implémenter côté backend
+    const periode = document.getElementById('periode-filter').value;
+    const departement = document.getElementById('departement-filter').value;
+    
+    const params = new URLSearchParams();
+    params.append('format', 'pdf');
+    params.append('periode', periode);
+    if (departement) params.append('departement', departement);
+    
+    // Ouvrir l'URL d'export dans un nouvel onglet
+    window.open(`/api/paie/statistiques/export/?${params.toString()}`, '_blank');
+    
+    // Notification de succès
+    showNotification('Export en cours...', 'info');
+}
+
+// Fonction utilitaire pour les notifications
+function showNotification(message, type = 'info') {
+    // Créer l'élément de notification
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Ajouter au DOM
+    document.body.appendChild(notification);
+    
+    // Supprimer automatiquement après 3 secondes
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+// Animation au scroll
+window.addEventListener('scroll', function() {
+    const cards = document.querySelectorAll('.detail-card, .chart-card');
+    cards.forEach(card => {
+        const cardTop = card.getBoundingClientRect().top;
+        const windowHeight = window.innerHeight;
+        
+        if (cardTop < windowHeight * 0.8) {
+            card.classList.add('fade-in');
+        }
+    });
+});
+</script>

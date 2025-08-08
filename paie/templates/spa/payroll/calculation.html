@@ -1,0 +1,707 @@
+<!-- spa/payroll/calculation.html -->
+<div class="container-fluid mt-4">
+    <!-- En-tête avec actions principales -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-calculator text-primary me-2"></i>
+                        Calcul de Paie
+                    </h2>
+                    <p class="text-muted mb-0">Calculs conformes à la législation marocaine</p>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary" onclick="loadContent('payroll-settings')">
+                        <i class="fas fa-cog me-1"></i> Paramètres
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="loadContent('payroll-history')">
+                        <i class="fas fa-calendar-plus me-1"></i> Nouvelle Période
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Panneau de calcul individuel -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-tie me-2"></i>
+                        Calcul Individuel
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="calculIndividuelForm">
+                        <!-- Sélection employé et période -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Employé</label>
+                                <select class="form-select" id="employe_select" required>
+                                    <option value="">Sélectionner un employé</option>
+                                    {% for employe in employes %}
+                                    <option value="{{ employe.id }}" 
+                                            data-salaire="{{ employe.salary }}"
+                                            data-anciennete="{{ employe.hire_date|date:'Y-m-d' }}">
+                                        {{ employe.last_name }} {{ employe.first_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Période</label>
+                                <select class="form-select" id="periode_select" required>
+                                    <option value="">Sélectionner une période</option>
+                                    {% for periode in periodes %}
+                                    <option value="{{ periode.id }}">
+                                        {{ periode.libelle }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Informations employé sélectionné -->
+                        <div id="employeInfo" class="alert alert-info d-none mb-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Salaire de base:</strong>
+                                    <span id="salaireBase">-</span> MAD
+                                </div>
+                                <div class="col-6">
+                                    <strong>Ancienneté:</strong>
+                                    <span id="anciennete">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Variables de paie -->
+                        <div class="border rounded p-3 mb-3">
+                            <h6 class="mb-3">
+                                <i class="fas fa-sliders-h text-success me-1"></i>
+                                Variables de Paie
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Heures supplémentaires</label>
+                                    <input type="number" class="form-control" 
+                                           id="heures_sup" step="0.25" min="0" value="0">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Taux heure sup. (MAD)</label>
+                                    <input type="number" class="form-control" 
+                                           id="taux_heure_sup" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Prime ancienneté</label>
+                                    <input type="number" class="form-control" 
+                                           id="prime_anciennete" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Prime responsabilité</label>
+                                    <input type="number" class="form-control" 
+                                           id="prime_responsabilite" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Indemnité transport</label>
+                                    <input type="number" class="form-control" 
+                                           id="indemnite_transport" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Avantages en nature</label>
+                                    <input type="number" class="form-control" 
+                                           id="avantages_nature" step="0.01" min="0" value="0">
+                                </div>
+                            </div>
+
+                            <hr>
+                            <h6 class="mb-3">
+                                <i class="fas fa-minus-circle text-danger me-1"></i>
+                                Retenues
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Avances</label>
+                                    <input type="number" class="form-control" 
+                                           id="avances" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Prêts</label>
+                                    <input type="number" class="form-control" 
+                                           id="prets" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Autres retenues</label>
+                                    <input type="number" class="form-control" 
+                                           id="autres_retenues" step="0.01" min="0" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-outline-primary" 
+                                    onclick="calculerTest()">
+                                <i class="fas fa-eye me-1"></i> Aperçu
+                            </button>
+                            <button type="button" class="btn btn-primary" 
+                                    onclick="genererBulletin()">
+                                <i class="fas fa-save me-1"></i> Générer Bulletin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Résultats de calcul -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-receipt me-2"></i>
+                        Résultat du Calcul
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="resultatCalcul" class="text-center text-muted py-5">
+                        <i class="fas fa-calculator fa-3x mb-3 opacity-50"></i>
+                        <p>Sélectionnez un employé et une période, puis cliquez sur "Aperçu"</p>
+                    </div>
+                    
+                    <!-- Template de résultat (sera rempli dynamiquement) -->
+                    <div id="resultatDetails" class="d-none">
+                        <!-- Éléments du brut -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-plus-circle text-success me-1"></i>
+                                Éléments du Brut
+                            </h6>
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">Salaire de base</div>
+                                <div class="col-4 text-end fw-bold" id="result_salaire_base">-</div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">Heures supplémentaires</div>
+                                <div class="col-4 text-end" id="result_heures_sup">-</div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">Primes et indemnités</div>
+                                <div class="col-4 text-end" id="result_primes">-</div>
+                            </div>
+                            <div class="row g-2 mb-2 border-top pt-2">
+                                <div class="col-8"><strong>Total Brut</strong></div>
+                                <div class="col-4 text-end fw-bold text-success" id="result_total_brut">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Cotisations sociales -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-shield-alt text-primary me-1"></i>
+                                Cotisations Sociales
+                            </h6>
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">CNSS (4.48%)</div>
+                                <div class="col-4 text-end" id="result_cnss">-</div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">AMO (2.26%)</div>
+                                <div class="col-4 text-end" id="result_amo">-</div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">CIMR</div>
+                                <div class="col-4 text-end" id="result_cimr">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Impôts -->
+                        <div class="mb-4">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-percentage text-warning me-1"></i>
+                                Impôt sur le Revenu
+                            </h6>
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">Base imposable</div>
+                                <div class="col-4 text-end" id="result_base_imposable">-</div>
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-8">IR net</div>
+                                <div class="col-4 text-end" id="result_ir">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Net à payer -->
+                        <div class="alert alert-success">
+                            <div class="row g-2">
+                                <div class="col-8">
+                                    <strong><i class="fas fa-money-bill-wave me-1"></i> Net à Payer</strong>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <strong class="fs-5" id="result_net_payer">-</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charges patronales -->
+                        <div class="border-top pt-3">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-building text-muted me-1"></i>
+                                Charges Patronales
+                            </h6>
+                            <div class="row g-2 small text-muted">
+                                <div class="col-6">CNSS Patronal</div>
+                                <div class="col-6 text-end" id="result_charges_cnss">-</div>
+                            </div>
+                            <div class="row g-2 small text-muted">
+                                <div class="col-6">AMO Patronal</div>
+                                <div class="col-6 text-end" id="result_charges_amo">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Périodes récentes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Périodes Récentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Période</th>
+                                    <th>Type</th>
+                                    <th>Dates</th>
+                                    <th>Statut</th>
+                                    <th>Bulletins</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for periode in periodes %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ periode.libelle }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ periode.get_type_periode_display }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ periode.date_debut|date:"d/m/Y" }} - {{ periode.date_fin|date:"d/m/Y" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if periode.statut == 'BROUILLON' %}
+                                            <span class="badge bg-warning">{{ periode.get_statut_display }}</span>
+                                        {% elif periode.statut == 'CALCULE' %}
+                                            <span class="badge bg-info">{{ periode.get_statut_display }}</span>
+                                        {% elif periode.statut == 'VALIDEE' %}
+                                            <span class="badge bg-success">{{ periode.get_statut_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-dark">{{ periode.get_statut_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ periode.bulletins.count }} bulletins</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="calculerPeriode({{ periode.id }})"
+                                                    {% if periode.statut == 'CLOTUREE' %}disabled{% endif %}>
+                                                <i class="fas fa-calculator"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" 
+                                                    onclick="voirBulletins({{ periode.id }})">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        Aucune période de paie définie
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript pour le calcul de paie -->
+<script>
+// Gestion de la sélection d'employé (dynamique)
+$(document).on('change', '#employe_select', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const employeInfo = $('#employeInfo');
+    if (selectedOption.value) {
+        const salaire = parseFloat(selectedOption.dataset.salaire);
+        const dateEmbauche = new Date(selectedOption.dataset.anciennete);
+        const anciennete = Math.floor((new Date() - dateEmbauche) / (365.25 * 24 * 60 * 60 * 1000));
+        $('#salaireBase').text(salaire.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}));
+        $('#anciennete').text(anciennete + ' ans');
+        employeInfo.removeClass('d-none');
+    } else {
+        employeInfo.addClass('d-none');
+    }
+});
+
+// Fonction de calcul test
+async function calculerTest() {
+    console.log('🚀 === DÉBUT CALCUL TEST ===');
+    
+    const formData = getFormData();
+    console.log('📊 Données du formulaire:', formData);
+    
+    // Vérifications détaillées
+    console.log('🔍 Vérifications:');
+    console.log('  - Employé ID:', formData.employe_id, typeof formData.employe_id);
+    console.log('  - Période ID:', formData.periode_id, typeof formData.periode_id);
+    console.log('  - Données variables:', formData.donnees_variables);
+    
+    if (!validateForm(formData)) {
+        console.log('❌ Validation échouée');
+        return;
+    }
+    console.log('✅ Validation réussie');
+    
+    try {
+        showCalcLoading('resultatCalcul');
+        console.log('⏳ Loading affiché');
+        
+        console.log('🚀 Envoi requête calcul test...');
+        const csrfToken = getCookie('csrftoken');
+        console.log('🔑 CSRF Token:', csrfToken ? 'Présent' : 'Absent');
+        
+        const requestBody = JSON.stringify(formData);
+        console.log('📦 Corps de requête:', requestBody);
+        
+        const response = await fetch('/api/paie/calculer-test/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: requestBody
+        });
+        
+        console.log('📡 Réponse reçue:', response.status, response.statusText);
+        console.log('📋 Headers de réponse:', [...response.headers.entries()]);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Contenu erreur:', errorText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ Données JSON:', data);
+        
+        if (data.success) {
+            console.log('🎉 Calcul réussi, affichage résultat...');
+            afficherResultat(data.resultat);
+        } else {
+            const errorMsg = data.error || 'Erreur inconnue lors du calcul';
+            console.error('❌ Erreur API:', errorMsg);
+            showAlert('Erreur de calcul: ' + errorMsg, 'danger');
+        }
+    } catch (error) {
+        console.error('💥 Erreur réseau/parsing:', error);
+        console.error('💥 Stack trace:', error.stack);
+        showAlert('Erreur réseau: ' + error.message, 'danger');
+    } finally {
+        hideCalcLoading('resultatCalcul');
+        console.log('🏁 === FIN CALCUL TEST ===');
+    }
+}
+
+// Fonction de génération bulletin
+async function genererBulletin() {
+    const formData = getFormData();
+    if (!validateForm(formData)) return;
+    
+    if (!confirm('Êtes-vous sûr de vouloir générer ce bulletin ?')) return;
+    
+    try {
+        const response = await fetch('/api/paie/generer-bulletin/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showAlert(data.message, 'success');
+            // Optionnel: rediriger vers la liste des bulletins
+        } else {
+            // Si bulletin existe déjà, proposer de le remplacer
+            if (data.error && data.error.includes('bulletin existe déjà')) {
+                if (confirm('Un bulletin existe déjà pour cette période. Voulez-vous le remplacer ?')) {
+                    formData.force_recreate = true;
+                    // Relancer avec force_recreate
+                    const response2 = await fetch('/api/paie/generer-bulletin/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    const data2 = await response2.json();
+                    if (data2.success) {
+                        showAlert('Bulletin remplacé avec succès', 'success');
+                    } else {
+                        showAlert('Erreur remplacement: ' + data2.error, 'danger');
+                    }
+                }
+            } else {
+                showAlert('Erreur génération: ' + (data.error || 'Erreur inconnue'), 'danger');
+            }
+        }
+    } catch (error) {
+        showAlert('Erreur réseau: ' + error.message, 'danger');
+    }
+}
+
+// Collecte des données du formulaire
+function getFormData() {
+    console.log('📋 === COLLECTE DONNÉES FORMULAIRE ===');
+    
+    const employeSelect = document.getElementById('employe_select');
+    const periodeSelect = document.getElementById('periode_select');
+    
+    console.log('🔍 Éléments DOM:');
+    console.log('  - Select employé:', employeSelect ? 'Trouvé' : 'Non trouvé');
+    console.log('  - Select période:', periodeSelect ? 'Trouvé' : 'Non trouvé');
+    
+    if (employeSelect) {
+        console.log('  - Valeur employé:', employeSelect.value);
+        console.log('  - Options employé:', employeSelect.options.length);
+    }
+    
+    if (periodeSelect) {
+        console.log('  - Valeur période:', periodeSelect.value);
+        console.log('  - Options période:', periodeSelect.options.length);
+    }
+    
+    const formData = {
+        employe_id: employeSelect ? employeSelect.value : '',
+        periode_id: periodeSelect ? periodeSelect.value : '',
+        donnees_variables: {
+            heures_sup: parseFloat(document.getElementById('heures_sup')?.value) || 0,
+            taux_heure_sup: parseFloat(document.getElementById('taux_heure_sup')?.value) || 0,
+            prime_anciennete: parseFloat(document.getElementById('prime_anciennete')?.value) || 0,
+            prime_responsabilite: parseFloat(document.getElementById('prime_responsabilite')?.value) || 0,
+            indemnite_transport: parseFloat(document.getElementById('indemnite_transport')?.value) || 0,
+            avantages_nature: parseFloat(document.getElementById('avantages_nature')?.value) || 0,
+            avances: parseFloat(document.getElementById('avances')?.value) || 0,
+            prets: parseFloat(document.getElementById('prets')?.value) || 0,
+            autres_retenues: parseFloat(document.getElementById('autres_retenues')?.value) || 0,
+        }
+    };
+    
+    console.log('📦 Données collectées:', formData);
+    console.log('🏁 === FIN COLLECTE DONNÉES ===');
+    
+    return formData;
+}
+
+// Validation du formulaire
+function validateForm(data) {
+    console.log('✅ === VALIDATION FORMULAIRE ===');
+    console.log('📋 Données à valider:', data);
+    
+    if (!data.employe_id) {
+        console.log('❌ Employé manquant');
+        showAlert('Veuillez sélectionner un employé', 'warning');
+        return false;
+    }
+    console.log('✅ Employé sélectionné:', data.employe_id);
+    
+    if (!data.periode_id) {
+        console.log('❌ Période manquante');
+        showAlert('Veuillez sélectionner une période', 'warning');
+        return false;
+    }
+    console.log('✅ Période sélectionnée:', data.periode_id);
+    
+    console.log('🎉 Validation réussie');
+    return true;
+}
+
+// Affichage du résultat
+function afficherResultat(calcul) {
+    console.log('📋 Affichage résultat:', calcul);
+    
+    if (!calcul) {
+        console.error('❌ Aucune donnée de calcul reçue');
+        showAlert('Erreur: Aucune donnée de calcul reçue', 'danger');
+        return;
+    }
+    
+    document.getElementById('resultatCalcul').classList.add('d-none');
+    document.getElementById('resultatDetails').classList.remove('d-none');
+    
+    // Formatter les nombres
+    const formatter = new Intl.NumberFormat('fr-FR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    
+    try {
+        // Vérifier la structure des données
+        const elementsBrut = calcul.elements_brut || {};
+        const cotisations = calcul.cotisations || {};
+        const impots = calcul.impots || {};
+        const chargesPatronales = calcul.charges_patronales || {};
+        
+        // Remplir les valeurs avec vérifications
+        document.getElementById('result_salaire_base').textContent = 
+            formatter.format(elementsBrut.salaire_base || 0) + ' MAD';
+        
+        document.getElementById('result_heures_sup').textContent = 
+            formatter.format(elementsBrut.heures_sup || 0) + ' MAD';
+        
+        const totalPrimes = (elementsBrut.prime_anciennete || 0) + 
+                           (elementsBrut.prime_responsabilite || 0) + 
+                           (elementsBrut.indemnite_transport || 0) + 
+                           (elementsBrut.avantages_nature || 0);
+        document.getElementById('result_primes').textContent = 
+            formatter.format(totalPrimes) + ' MAD';
+        
+        document.getElementById('result_total_brut').textContent = 
+            formatter.format(elementsBrut.total_brut || 0) + ' MAD';
+        
+        document.getElementById('result_cnss').textContent = 
+            formatter.format(cotisations.cnss || 0) + ' MAD';
+        
+        document.getElementById('result_amo').textContent = 
+            formatter.format(cotisations.amo || 0) + ' MAD';
+        
+        document.getElementById('result_cimr').textContent = 
+            formatter.format(cotisations.cimr || 0) + ' MAD';
+        
+        document.getElementById('result_base_imposable').textContent = 
+            formatter.format(impots.base_imposable || 0) + ' MAD';
+        
+        document.getElementById('result_ir').textContent = 
+            formatter.format(impots.ir_net || 0) + ' MAD';
+        
+        document.getElementById('result_net_payer').textContent = 
+            formatter.format(calcul.net_a_payer || 0) + ' MAD';
+        
+        document.getElementById('result_charges_cnss').textContent = 
+            formatter.format(chargesPatronales.cnss || 0) + ' MAD';
+        
+        document.getElementById('result_charges_amo').textContent = 
+            formatter.format(chargesPatronales.amo || 0) + ' MAD';
+        
+        console.log('✅ Résultat affiché avec succès');
+        
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'affichage:', error);
+        showAlert('Erreur lors de l\'affichage du résultat: ' + error.message, 'danger');
+    }
+}
+
+// Fonctions utilitaires
+// Fonction pour obtenir le CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Fonction showAlert sécurisée
+function showAlert(message, type = 'info') {
+    console.log(`🔔 Alert [${type}]: ${message}`);
+    // Vérifier si la fonction globale existe
+    if (typeof window.showAlert === 'function') {
+        window.showAlert(message, type);
+    } else {
+        // Fallback simple
+        const alertType = type === 'danger' ? 'error' : type;
+        console.log(`[${alertType.toUpperCase()}] ${message}`);
+        alert(`${alertType.toUpperCase()}: ${message}`);
+    }
+}
+
+// Fonction pour afficher le loading pendant le calcul
+function showCalcLoading(elementId) {
+    console.log('⏳ Affichage loading pour:', elementId);
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.innerHTML = `
+            <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Calcul en cours...</span>
+                    </div>
+                    <div class="mt-3">
+                        <h5>Calcul en cours...</h5>
+                        <p class="text-muted">Veuillez patienter</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        element.style.display = 'block';
+    } else {
+        console.warn(`⚠️ Élément ${elementId} non trouvé pour le loading`);
+    }
+}
+
+// Fonction pour masquer le loading
+function hideCalcLoading(elementId) {
+    console.log('✅ Masquage loading pour:', elementId);
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.style.display = 'none';
+    }
+}
+
+function calculerPeriode(periodeId) {
+    if (confirm('Calculer tous les bulletins de cette période ?')) {
+        // Implémenter calcul période
+        showAlert('Fonctionnalité en cours de développement', 'info');
+    }
+}
+
+function voirBulletins(periodeId) {
+    // Naviguer vers la section Bulletins
+    loadContent('payroll-bulletins');
+}
+</script>

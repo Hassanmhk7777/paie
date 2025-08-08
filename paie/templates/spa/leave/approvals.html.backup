@@ -1,0 +1,871 @@
+<!-- templates/spa/leave/approvals.html -->
+<div class="container-fluid mt-4">
+    <!-- En-tête avec statistiques -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Approbations de Congés
+                    </h2>
+                    <p class="text-muted mb-0">Gestion des demandes d'équipe</p>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-primary" onclick="refreshApprovals()">
+                        <i class="fas fa-sync me-1"></i> Actualiser
+                    </button>
+                    <button type="button" class="btn btn-info" onclick="loadSPAContent('leave/calendar')">
+                        <i class="fas fa-calendar me-1"></i> Calendrier
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistiques rapides -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card border-left-warning h-100">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        En Attente
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ stats.en_attente }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-clock fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="card border-left-success h-100">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Approuvées ce mois
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ stats.approuvees_mois }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-check fa-2x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="card border-left-danger h-100">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                        Refusées ce mois
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {{ stats.refusees_mois }}
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-times fa-2x text-danger"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3" id="filtersForm">
+                        <div class="col-md-2">
+                            <label class="form-label">Statut</label>
+                            <select class="form-select" name="statut" onchange="this.form.submit()">
+                                <option value="EN_ATTENTE" {% if filters.statut == 'EN_ATTENTE' %}selected{% endif %}>
+                                    En attente
+                                </option>
+                                <option value="SOUMISE" {% if filters.statut == 'SOUMISE' %}selected{% endif %}>
+                                    Soumises
+                                </option>
+                                <option value="APPROUVEE" {% if filters.statut == 'APPROUVEE' %}selected{% endif %}>
+                                    Approuvées
+                                </option>
+                                <option value="REFUSEE" {% if filters.statut == 'REFUSEE' %}selected{% endif %}>
+                                    Refusées
+                                </option>
+                                <option value="" {% if not filters.statut %}selected{% endif %}>
+                                    Tous les statuts
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Département</label>
+                            <select class="form-select" name="departement" onchange="this.form.submit()">
+                                <option value="">Tous les départements</option>
+                                {% for dept in departements %}
+                                <option value="{{ dept }}" 
+                                        {% if filters.departement == dept %}selected{% endif %}>
+                                    {{ dept }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Employé</label>
+                            <select class="form-select" name="employe" onchange="this.form.submit()">
+                                <option value="">Tous les employés</option>
+                                {% for employe in employes %}
+                                <option value="{{ employe.id }}" 
+                                        {% if filters.employe == employe.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ employe.first_name }} {{ employe.last_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Type de congé</label>
+                            <select class="form-select" name="type_conge" onchange="this.form.submit()">
+                                <option value="">Tous les types</option>
+                                {% for type_conge in types_conges %}
+                                <option value="{{ type_conge.id }}" 
+                                        {% if filters.type_conge == type_conge.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ type_conge.libelle }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Recherche</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="search" 
+                                       value="{{ filters.search }}" 
+                                       placeholder="Nom, n°..."
+                                       onkeypress="if(event.key==='Enter') this.form.submit()">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des demandes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Demandes ({{ demandes.paginator.count }} total)
+                        </h5>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-success" onclick="approveAllVisible()" 
+                                    {% if not demandes %}disabled{% endif %}>
+                                <i class="fas fa-check-double me-1"></i> Approuver Sélection
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="exportApprovals()">
+                                <i class="fas fa-download me-1"></i> Exporter
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if demandes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40">
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th>Demande</th>
+                                    <th>Employé</th>
+                                    <th>Période</th>
+                                    <th>Type</th>
+                                    <th>Durée</th>
+                                    <th>Statut</th>
+                                    <th>Priorité</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for demande in demandes %}
+                                <tr class="{% if demande.priorite == 'URGENTE' %}table-warning{% endif %}">
+                                    <td>
+                                        <input type="checkbox" class="demande-checkbox" 
+                                               value="{{ demande.id }}"
+                                               {% if not demande.statut|slice:":8" == "EN_ATTEN" and demande.statut != "SOUMISE" %}disabled{% endif %}>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ demande.numero_demande }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                Créée {{ demande.date_creation|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                {{ demande.employe.first_name|first }}{{ demande.employe.last_name|first }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ demande.employe.first_name }} {{ demande.employe.last_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ demande.employe.department.name|default:"N/A" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>{{ demande.date_debut|date:"d/m" }} - {{ demande.date_fin|date:"d/m/Y" }}</strong>
+                                        {% if demande.motif %}
+                                        <br>
+                                        <small class="text-muted" title="{{ demande.motif }}">
+                                            <i class="fas fa-comment-alt me-1"></i>
+                                            {{ demande.motif|truncatechars:30 }}
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="type-conge-indicator me-2" 
+                                                 style="background-color: {{ demande.type_conge.couleur_affichage }}; width: 12px; height: 12px; border-radius: 50%;"></div>
+                                            <span>{{ demande.type_conge.libelle }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">
+                                            {{ demande.nb_jours_ouvrables }} jour{{ demande.nb_jours_ouvrables|pluralize }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if demande.statut == 'SOUMISE' %}
+                                            <span class="badge bg-info">{{ demande.get_statut_display }}</span>
+                                        {% elif 'EN_ATTENTE_MANAGER' in demande.statut %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-user-tie me-1"></i>Manager
+                                            </span>
+                                        {% elif 'EN_ATTENTE_RH' in demande.statut %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-users me-1"></i>RH
+                                            </span>
+                                        {% elif demande.statut == 'APPROUVEE' %}
+                                            <span class="badge bg-success">{{ demande.get_statut_display }}</span>
+                                        {% elif demande.statut == 'REFUSEE' %}
+                                            <span class="badge bg-danger">{{ demande.get_statut_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ demande.get_statut_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if demande.priorite == 'URGENTE' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-exclamation me-1"></i>Urgent
+                                            </span>
+                                        {% elif demande.priorite == 'PLANIFIEE' %}
+                                            <span class="badge bg-info">Planifiée</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Normale</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <!-- Bouton Approuver -->
+                                            {% if demande.statut == 'SOUMISE' or 'EN_ATTENTE' in demande.statut %}
+                                            <button class="btn btn-outline-success" 
+                                                    onclick="showApprovalModal({{ demande.id }}, 'approve')"
+                                                    title="Approuver">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            {% endif %}
+                                            
+                                            <!-- Bouton Refuser -->
+                                            {% if demande.statut == 'SOUMISE' or 'EN_ATTENTE' in demande.statut %}
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="showApprovalModal({{ demande.id }}, 'reject')"
+                                                    title="Refuser">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                            
+                                            <!-- Bouton Détail -->
+                                            <button class="btn btn-outline-primary" 
+                                                    onclick="viewRequestDetail({{ demande.id }})"
+                                                    title="Voir détail">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            
+                                            <!-- Bouton Historique -->
+                                            <button class="btn btn-outline-info" 
+                                                    onclick="viewRequestHistory({{ demande.id }})"
+                                                    title="Historique">
+                                                <i class="fas fa-history"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                        <h5>Aucune demande trouvée</h5>
+                        <p>Aucune demande ne correspond aux critères sélectionnés</p>
+                        <button class="btn btn-outline-primary" onclick="resetFilters()">
+                            <i class="fas fa-filter me-1"></i> Réinitialiser les filtres
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Pagination -->
+                {% if demandes.has_other_pages %}
+                <div class="card-footer">
+                    <nav aria-label="Pagination demandes">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if demandes.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ demandes.previous_page_number }}{% for key, value in filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        Précédent
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in demandes.paginator.page_range %}
+                                {% if demandes.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > demandes.number|add:'-3' and num < demandes.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% for key, value in filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if demandes.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ demandes.next_page_number }}{% for key, value in filters.items %}{% if value %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                        Suivant
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal approbation/refus -->
+<div class="modal fade" id="approvalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="approvalModalTitle">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Confirmer l'Action
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="approvalRequestInfo" class="mb-3">
+                    <!-- Info demande chargée dynamiquement -->
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Commentaire <span id="commentaireRequired" class="text-danger d-none">*</span></label>
+                    <textarea class="form-control" id="approvalCommentaire" rows="3" 
+                              placeholder="Ajoutez un commentaire pour expliquer votre décision..."></textarea>
+                    <div class="form-text">Ce commentaire sera visible par l'employé</div>
+                </div>
+                
+                <div class="alert alert-info d-none" id="approvalImpact">
+                    <!-- Impact de l'approbation -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn" id="confirmApprovalBtn" onclick="confirmApproval()">
+                    <i class="fas fa-check me-1"></i> Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal détail demande -->
+<div class="modal fade" id="detailRequestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Détail de la Demande
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailRequestContent">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-success" id="approveFromDetail" onclick="showApprovalModal(currentRequestId, 'approve')">
+                    <i class="fas fa-check me-1"></i> Approuver
+                </button>
+                <button type="button" class="btn btn-danger" id="rejectFromDetail" onclick="showApprovalModal(currentRequestId, 'reject')">
+                    <i class="fas fa-times me-1"></i> Refuser
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal historique -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-history me-2"></i>
+                    Historique de la Demande
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="historyContent">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+let currentRequestId = null;
+let currentAction = null;
+
+// Actualiser la page
+function refreshApprovals() {
+    location.reload();
+}
+
+// Réinitialiser les filtres
+function resetFilters() {
+    window.location.href = window.location.pathname;
+}
+
+// Toggle sélection de toutes les demandes
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.demande-checkbox:not(:disabled)');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// Afficher modal d'approbation/refus
+function showApprovalModal(requestId, action) {
+    currentRequestId = requestId;
+    currentAction = action;
+    
+    const modal = document.getElementById('approvalModal');
+    const title = document.getElementById('approvalModalTitle');
+    const btn = document.getElementById('confirmApprovalBtn');
+    const commentaireRequired = document.getElementById('commentaireRequired');
+    
+    if (action === 'approve') {
+        title.innerHTML = '<i class="fas fa-check-circle text-success me-2"></i>Approuver la Demande';
+        btn.className = 'btn btn-success';
+        btn.innerHTML = '<i class="fas fa-check me-1"></i> Approuver';
+        commentaireRequired.classList.add('d-none');
+    } else {
+        title.innerHTML = '<i class="fas fa-times-circle text-danger me-2"></i>Refuser la Demande';
+        btn.className = 'btn btn-danger';
+        btn.innerHTML = '<i class="fas fa-times me-1"></i> Refuser';
+        commentaireRequired.classList.remove('d-none');
+    }
+    
+    // Charger info de la demande
+    loadRequestInfo(requestId);
+    
+    // Reset commentaire
+    document.getElementById('approvalCommentaire').value = '';
+    
+    new bootstrap.Modal(modal).show();
+}
+
+// Charger informations de la demande
+async function loadRequestInfo(requestId) {
+    try {
+        // Simuler chargement (à remplacer par vraie API)
+        const infoDiv = document.getElementById('approvalRequestInfo');
+        infoDiv.innerHTML = `
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Demande:</strong> #CONG2024${requestId.toString().padStart(4, '0')}<br>
+                            <strong>Employé:</strong> <span class="text-info">Chargement...</span><br>
+                            <strong>Type:</strong> <span class="text-info">Chargement...</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Période:</strong> <span class="text-info">Chargement...</span><br>
+                            <strong>Durée:</strong> <span class="text-info">Chargement...</span><br>
+                            <strong>Statut:</strong> <span class="text-info">Chargement...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // TODO: Remplacer par appel API réel
+        setTimeout(() => {
+            infoDiv.innerHTML = `
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Demande:</strong> #CONG2024${requestId.toString().padStart(4, '0')}<br>
+                                <strong>Employé:</strong> John Doe<br>
+                                <strong>Type:</strong> Congé annuel
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Période:</strong> 15/12/2024 - 20/12/2024<br>
+                                <strong>Durée:</strong> 4 jours ouvrables<br>
+                                <strong>Statut:</strong> En attente RH
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }, 500);
+        
+    } catch (error) {
+        console.error('Erreur chargement info demande:', error);
+    }
+}
+
+// Confirmer approbation/refus
+async function confirmApproval() {
+    const commentaire = document.getElementById('approvalCommentaire').value.trim();
+    
+    // Validation
+    if (currentAction === 'reject' && !commentaire) {
+        showAlert('Un commentaire est requis pour refuser une demande', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/leave/${currentRequestId}/approve/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                action: currentAction,
+                commentaire: commentaire
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const actionText = currentAction === 'approve' ? 'approuvée' : 'refusée';
+            showAlert(`Demande ${actionText} avec succès !`, 'success');
+            bootstrap.Modal.getInstance(document.getElementById('approvalModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert('Erreur: ' + data.error, 'danger');
+        }
+    } catch (error) {
+        showAlert('Erreur réseau: ' + error.message, 'danger');
+    }
+}
+
+// Approuver toutes les demandes sélectionnées
+async function approveAllVisible() {
+    const selectedCheckboxes = document.querySelectorAll('.demande-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        showAlert('Aucune demande sélectionnée', 'warning');
+        return;
+    }
+    
+    if (!confirm(`Approuver ${selectedCheckboxes.length} demande(s) sélectionnée(s) ?`)) {
+        return;
+    }
+    
+    let approved = 0;
+    let errors = 0;
+    
+    for (const checkbox of selectedCheckboxes) {
+        try {
+            const response = await fetch(`/api/leave/${checkbox.value}/approve/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    action: 'approve',
+                    commentaire: 'Approbation en lot'
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                approved++;
+            } else {
+                errors++;
+            }
+        } catch (error) {
+            errors++;
+        }
+    }
+    
+    showAlert(`${approved} demandes approuvées, ${errors} erreurs`, approved > 0 ? 'success' : 'warning');
+    if (approved > 0) {
+        setTimeout(() => location.reload(), 1000);
+    }
+}
+
+// Voir détail d'une demande
+async function viewRequestDetail(requestId) {
+    currentRequestId = requestId;
+    
+    try {
+        const content = document.getElementById('detailRequestContent');
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-2">Chargement du détail...</p>
+            </div>
+        `;
+        
+        new bootstrap.Modal(document.getElementById('detailRequestModal')).show();
+        
+        // TODO: Remplacer par appel API réel
+        setTimeout(() => {
+            content.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">Informations Générales</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>N° Demande:</strong></td><td>#CONG2024${requestId.toString().padStart(4, '0')}</td></tr>
+                            <tr><td><strong>Employé:</strong></td><td>John Doe</td></tr>
+                            <tr><td><strong>Département:</strong></td><td>IT</td></tr>
+                            <tr><td><strong>Type:</strong></td><td>Congé annuel</td></tr>
+                            <tr><td><strong>Priorité:</strong></td><td><span class="badge bg-secondary">Normale</span></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">Période et Durée</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Date début:</strong></td><td>15/12/2024</td></tr>
+                            <tr><td><strong>Date fin:</strong></td><td>20/12/2024</td></tr>
+                            <tr><td><strong>Date reprise:</strong></td><td>21/12/2024</td></tr>
+                            <tr><td><strong>Durée:</strong></td><td>4 jours ouvrables</td></tr>
+                            <tr><td><strong>Statut:</strong></td><td><span class="badge bg-warning">En attente RH</span></td></tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="border-bottom pb-2 mb-3">Motif</h6>
+                        <p class="text-muted">Congé prévu pour les fêtes de fin d'année. Besoin de récupérer après une période intense de travail.</p>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">Soldes</h6>
+                        <div class="alert alert-info">
+                            <strong>Solde actuel:</strong> 12 jours<br>
+                            <strong>Après congé:</strong> 8 jours<br>
+                            <strong>Statut:</strong> <span class="text-success">Solde suffisant</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2 mb-3">Impact Équipe</h6>
+                        <div class="alert alert-warning">
+                            <strong>Autres absents:</strong> 1 personne<br>
+                            <strong>Équipe restante:</strong> 4 personnes<br>
+                            <strong>Impact:</strong> <span class="text-warning">Modéré</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }, 1000);
+        
+    } catch (error) {
+        showAlert('Erreur chargement détail', 'danger');
+    }
+}
+
+// Voir historique d'une demande
+async function viewRequestHistory(requestId) {
+    try {
+        const content = document.getElementById('historyContent');
+        content.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-2">Chargement de l'historique...</p>
+            </div>
+        `;
+        
+        new bootstrap.Modal(document.getElementById('historyModal')).show();
+        
+        // TODO: Remplacer par appel API réel
+        setTimeout(() => {
+            content.innerHTML = `
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Demande créée</h6>
+                            <p class="text-muted mb-1">Par: John Doe</p>
+                            <small class="text-muted">10/12/2024 à 14:30</small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Soumise pour approbation</h6>
+                            <p class="text-muted mb-1">Envoyée au manager: Jane Smith</p>
+                            <small class="text-muted">10/12/2024 à 14:30</small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">Approuvée par le manager</h6>
+                            <p class="text-muted mb-1">Par: Jane Smith</p>
+                            <p class="text-muted mb-1"><em>Commentaire: Période appropriée, équipe couverte.</em></p>
+                            <small class="text-muted">11/12/2024 à 09:15</small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-warning"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-1">En attente approbation RH</h6>
+                            <p class="text-muted mb-1">Assignée à: Marie Dupont</p>
+                            <small class="text-muted">11/12/2024 à 09:16</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }, 800);
+        
+    } catch (error) {
+        showAlert('Erreur chargement historique', 'danger');
+    }
+}
+
+// Exporter les approbations
+function exportApprovals() {
+    showAlert('Export en cours de développement', 'info');
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // Masquer boutons d'action dans le détail si demande déjà traitée
+    // Sera géré dynamiquement avec les vraies données
+});
+</script>
+
+<style>
+.border-left-warning { border-left: 4px solid #ffc107 !important; }
+.border-left-success { border-left: 4px solid #28a745 !important; }
+.border-left-danger { border-left: 4px solid #dc3545 !important; }
+
+.type-conge-indicator {
+    flex-shrink: 0;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 20px;
+    height: calc(100% - 20px);
+    width: 2px;
+    background-color: #dee2e6;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #dee2e6;
+}
+
+.timeline-content {
+    padding: 0;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+}
+
+.table-warning {
+    --bs-table-bg: #fff3cd;
+}
+
+.btn-group .btn:disabled {
+    opacity: 0.3;
+}
+</style>

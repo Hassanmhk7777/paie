@@ -1,0 +1,438 @@
+<!-- templates/spa/leave/planning.html -->
+<div class="container-fluid mt-4">
+    <!-- En-tête avec navigation mensuelle -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="h4 mb-0">
+                        <i class="fas fa-calendar-alt text-primary me-2"></i>
+                        Planification des Congés
+                    </h2>
+                    <p class="text-muted mb-0">{{ mois_nom }} {{ annee }}</p>
+                </div>
+                <div class="btn-group">
+                    <a href="?mois={{ mois_precedent }}&annee={{ annee_precedente }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-chevron-left"></i> Précédent
+                    </a>
+                    <button type="button" class="btn btn-outline-primary" onclick="goToCurrentMonth()">
+                        Aujourd'hui
+                    </button>
+                    <a href="?mois={{ mois_suivant }}&annee={{ annee_suivante }}" class="btn btn-outline-secondary">
+                        Suivant <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <input type="hidden" name="mois" value="{{ mois }}">
+                        <input type="hidden" name="annee" value="{{ annee }}">
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Département</label>
+                            <select name="departement" class="form-select">
+                                <option value="">Tous les départements</option>
+                                {% for dept in departements %}
+                                <option value="{{ dept.id }}" {% if request.GET.departement == dept.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Type de congé</label>
+                            <select name="type_conge" class="form-select">
+                                <option value="">Tous les types</option>
+                                {% for type in types_conges %}
+                                <option value="{{ type.id }}" {% if request.GET.type_conge == type.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ type.libelle }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter me-1"></i> Filtrer
+                                </button>
+                                <a href="?mois={{ mois }}&annee={{ annee }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i> Effacer
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Statistiques du mois -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-50">Total Congés</div>
+                                    <div class="h5 mb-0">{{ stats_mois.total_conges }}</div>
+                                </div>
+                                <div>
+                                    <i class="fas fa-calendar-check fa-2x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-50">Jours Total</div>
+                                    <div class="h5 mb-0">{{ stats_mois.jours_total }}</div>
+                                </div>
+                                <div>
+                                    <i class="fas fa-clock fa-2x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-50">Employés en Congé</div>
+                                    <div class="h5 mb-0">{{ stats_mois.employes_en_conge }}</div>
+                                </div>
+                                <div>
+                                    <i class="fas fa-users fa-2x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-warning text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="text-white-50">Types Utilisés</div>
+                                    <div class="h5 mb-0">{{ stats_mois.types_utilises }}</div>
+                                </div>
+                                <div>
+                                    <i class="fas fa-tags fa-2x text-white-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendrier de planification -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        Calendrier de Planification - {{ mois_nom }} {{ annee }}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="planning-calendar" class="table-responsive">
+                        <!-- Le calendrier sera généré ici -->
+                        <div class="p-4 text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                            <p class="mt-2">Génération du calendrier...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des congés du mois -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Liste des Congés - {{ mois_nom }} {{ annee }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if conges_mois %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Employé</th>
+                                    <th>Département</th>
+                                    <th>Type de Congé</th>
+                                    <th>Période</th>
+                                    <th>Durée</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for conge in conges_mois %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-2">
+                                                <span class="avatar-title bg-primary rounded-circle">
+                                                    {{ conge.employe.first_name|first }}{{ conge.employe.last_name|first }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold">{{ conge.employe.first_name }} {{ conge.employe.last_name }}</div>
+                                                <small class="text-muted">{{ conge.employe.position }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ conge.employe.department.name|default:"N/A" }}</td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ conge.type_conge.couleur_affichage|default:'#007bff' }};">
+                                            {{ conge.type_conge.libelle }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ conge.date_debut|date:"d/m/Y" }} - {{ conge.date_fin|date:"d/m/Y" }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ conge.nb_jours_ouvrables }} jour{{ conge.nb_jours_ouvrables|pluralize }}</span>
+                                    </td>
+                                    <td>
+                                        {% if conge.statut == 'APPROUVEE' %}
+                                        <span class="badge bg-success">Approuvé</span>
+                                        {% elif conge.statut == 'EN_COURS' %}
+                                        <span class="badge bg-primary">En cours</span>
+                                        {% elif conge.statut == 'TERMINEE' %}
+                                        <span class="badge bg-secondary">Terminé</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">{{ conge.get_statut_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary" 
+                                                    onclick="viewCongeDetails({{ conge.id }})" title="Voir détails">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if request.user.is_staff %}
+                                            <button type="button" class="btn btn-outline-warning" 
+                                                    onclick="editConge({{ conge.id }})" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5>Aucun congé planifié</h5>
+                        <p class="text-muted">Aucun congé n'est planifié pour ce mois.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal détails congé -->
+<div class="modal fade" id="congeDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Détails du Congé</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="congeDetailsContent">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonction pour aller au mois actuel
+function goToCurrentMonth() {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('mois', currentMonth);
+    urlParams.set('annee', currentYear);
+    
+    window.location.search = urlParams.toString();
+}
+
+// Générer le calendrier
+function generateCalendar() {
+    const calendarContainer = document.getElementById('planning-calendar');
+    const calendarData = {{ calendar_data|safe }};
+    const month = {{ mois }};
+    const year = {{ annee }};
+    
+    // Calculer le premier jour du mois et nombre de jours
+    const firstDay = new Date(year, month - 1, 1);
+    const lastDay = new Date(year, month, 0);
+    const daysInMonth = lastDay.getDate();
+    const startDay = firstDay.getDay();
+    
+    let calendarHtml = `
+        <table class="table table-bordered mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="text-center">Dim</th>
+                    <th class="text-center">Lun</th>
+                    <th class="text-center">Mar</th>
+                    <th class="text-center">Mer</th>
+                    <th class="text-center">Jeu</th>
+                    <th class="text-center">Ven</th>
+                    <th class="text-center">Sam</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    let dayCount = 1;
+    for (let week = 0; week < 6; week++) {
+        calendarHtml += '<tr>';
+        for (let day = 0; day < 7; day++) {
+            if (week === 0 && day < startDay) {
+                calendarHtml += '<td class="calendar-day empty"></td>';
+            } else if (dayCount > daysInMonth) {
+                calendarHtml += '<td class="calendar-day empty"></td>';
+            } else {
+                const dateKey = `${year}-${String(month).padStart(2, '0')}-${String(dayCount).padStart(2, '0')}`;
+                const dayConges = calendarData[dateKey] || [];
+                
+                calendarHtml += `
+                    <td class="calendar-day">
+                        <div class="day-number">${dayCount}</div>
+                        <div class="day-leaves">
+                `;
+                
+                dayConges.forEach(conge => {
+                    calendarHtml += `
+                        <div class="leave-item" style="background-color: ${conge.color}; opacity: 0.7;">
+                            <small>${conge.employe}</small>
+                        </div>
+                    `;
+                });
+                
+                calendarHtml += `
+                        </div>
+                    </td>
+                `;
+                dayCount++;
+            }
+        }
+        calendarHtml += '</tr>';
+        if (dayCount > daysInMonth) break;
+    }
+    
+    calendarHtml += `
+            </tbody>
+        </table>
+    `;
+    
+    calendarContainer.innerHTML = calendarHtml;
+}
+
+// Voir détails d'un congé
+function viewCongeDetails(congeId) {
+    // Charger les détails via AJAX
+    fetch(`/api/leave/${congeId}/details/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('congeDetailsContent').innerHTML = data.html;
+            new bootstrap.Modal(document.getElementById('congeDetailsModal')).show();
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('Erreur lors du chargement des détails', 'error');
+        });
+}
+
+// Modifier un congé (pour RH)
+function editConge(congeId) {
+    // Rediriger vers la page d'édition ou ouvrir un modal
+    window.location.href = `/leave/edit/${congeId}/`;
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    generateCalendar();
+});
+</script>
+
+<style>
+.calendar-day {
+    height: 120px;
+    vertical-align: top;
+    padding: 8px;
+    position: relative;
+}
+
+.calendar-day.empty {
+    background-color: #f8f9fa;
+}
+
+.day-number {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.day-leaves {
+    max-height: 80px;
+    overflow-y: auto;
+}
+
+.leave-item {
+    color: white;
+    padding: 2px 4px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+}
+
+.avatar-title {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+</style>

@@ -1,0 +1,1215 @@
+{% load permission_tags %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PaiePro - Gestion RH Maroc{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👥</text></svg>">
+    
+    <!-- CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-dark: #1e3a8a;
+            --accent-blue: #60a5fa;
+            --white: #ffffff;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-500: #64748b;
+            --gray-700: #334155;
+            --gray-900: #0f172a;
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .main-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-light) 100%);
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .header-brand {
+            color: var(--white);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-brand i {
+            font-size: 2rem;
+        }
+
+        .header-actions {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            transform: translateY(-1px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background: var(--white);
+            border-right: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            overflow-y: auto;
+            z-index: 999;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-menu {
+            padding: 1.5rem 0;
+        }
+
+        .menu-section {
+            margin-bottom: 2rem;
+        }
+
+        .menu-section-title {
+            padding: 0 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            letter-spacing: 0.05em;
+        }
+
+        .menu-item {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: var(--gray-700);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background: var(--gray-50);
+            color: var(--primary-blue);
+            border-left-color: var(--accent-blue);
+        }
+
+        .menu-item.active {
+            background: linear-gradient(90deg, rgba(30, 64, 175, 0.1) 0%, transparent 100%);
+            color: var(--primary-blue);
+            border-left-color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .menu-item i {
+            width: 1.25rem;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .menu-badge {
+            background: var(--primary-blue);
+            color: var(--white);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 1rem;
+            margin-left: auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+            padding: 2rem;
+        }
+
+        .content-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Content Area */
+        .content-area {
+            background: var(--white);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            min-height: calc(100vh - var(--header-height) - 4rem);
+        }
+
+        /* Loading States */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 0.25rem solid var(--gray-200);
+            border-top: 0.25rem solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .header-brand {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* Custom Scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 2px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Morocco-specific styling */
+        .morocco-flag {
+            background: linear-gradient(45deg, #c1272d 50%, #006233 50%);
+            width: 20px;
+            height: 15px;
+            border-radius: 2px;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        /* 🎨 STYLES POUR LE MODULE POINTAGE */
+        
+        /* Animation pour l'indicateur en temps réel */
+        .pulse-indicator {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Badge de notification avec animation */
+        .menu-badge {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.65rem;
+            padding: 0.25em 0.5em;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            min-width: 18px;
+            text-align: center;
+            animation: bounce 0.5s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(-50%) translateX(0); }
+            40% { transform: translateY(-60%) translateX(0); }
+            80% { transform: translateY(-55%) translateX(0); }
+        }
+
+        /* Indicateur d'activité pour les menus */
+        .menu-indicator {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Style spécial pour les liens du module pointage */
+        .menu-item[data-section^="attendance"] {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item[data-section^="attendance"]:hover {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transform: translateX(3px);
+            transition: all 0.3s ease;
+        }
+
+        /* État actif du menu pointage */
+        .menu-item[data-section^="attendance"].active {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            box-shadow: 0 2px 10px rgba(0, 123, 255, 0.3);
+            border-left-color: #007bff;
+        }
+
+        .menu-item[data-section^="attendance"].active i {
+            color: white !important;
+        }
+
+        .menu-item[data-section^="attendance"].active .menu-badge {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: white;
+        }
+
+        /* Container pour les toasts de notification */
+        .toast-container {
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* Responsive - adaptation mobile */
+        @media (max-width: 768px) {
+            .menu-badge,
+            .menu-indicator {
+                display: none;
+            }
+        }
+        /* Styles pour le header utilisateur */
+.header-user-info {
+    color: white;
+}
+
+.header-username {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: white;
+    line-height: 1.2;
+}
+
+.header-role {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.user-avatar-default {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: var(--gray-50);
+}
+
+/* Badges de menu adaptés */
+.menu-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.menu-badge.bg-danger {
+    background: #dc3545 !important;
+}
+
+.menu-badge.bg-warning {
+    background: #ffc107 !important;
+    color: #000;
+}
+
+.menu-badge.bg-info {
+    background: #0dcaf0 !important;
+    color: #000;
+}
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <a href="#" class="header-brand" onclick="loadContent('dashboard')">
+            <i class="fas fa-users-cog"></i>
+            <span>PaiePro</span>
+            <small style="font-size: 0.7rem; opacity: 0.8;">Maroc</small>
+        </a>
+        
+     <div class="header-actions">
+    {% if user.is_authenticated %}
+        <!-- Info utilisateur avec rôle -->
+        <div class="header-user-info me-3">
+            <div class="d-flex align-items-center">
+                {% if user_profile.avatar %}
+                    <img src="{{ user_profile.avatar.url }}" alt="Avatar" 
+                         class="rounded-circle me-2" width="32" height="32">
+                {% else %}
+                    <div class="user-avatar-default me-2">
+                        <i class="fas fa-user"></i>
+                    </div>
+                {% endif %}
+                <div class="d-none d-lg-block">
+                    <div class="header-username">{{ user.get_full_name|default:user.username }}</div>
+                    <small class="header-role">
+                        {% if user_profile.is_admin %}
+                            <span class="badge bg-danger">👑 Administrateur</span>
+                        {% elif user_profile.is_rh %}
+                            <span class="badge bg-warning">🏢 RH</span>
+                        {% elif user_profile.is_employe %}
+                            <span class="badge bg-info">👤 Employé</span>
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu utilisateur -->
+        <div class="dropdown me-2">
+            <button class="header-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="fas fa-user-cog me-1"></i>
+                <span class="d-none d-md-inline">Menu</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'paie:profile' %}">
+                    <i class="fas fa-user me-2"></i>Mon Profil
+                </a></li>
+                {% if user_profile.is_admin %}
+                <li><a class="dropdown-item" href="/admin/" target="_blank">
+                    <i class="fas fa-cog me-2"></i>Administration Django
+                </a></li>
+                {% endif %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'paie:logout' %}">
+                    <i class="fas fa-sign-out-alt me-2"></i>Se déconnecter
+                </a></li>
+            </ul>
+        </div>
+
+    {% else %}
+        <a href="{% url 'paie:login' %}" class="header-btn text-primary">
+            <i class="fas fa-sign-in-alt me-1"></i>
+            <span class="d-none d-md-inline">Connexion</span>
+        </a>
+    {% endif %}
+
+    <!-- Bouton mobile menu -->
+    <a href="#" class="header-btn" id="mobile-menu-toggle">
+        <i class="fas fa-bars d-md-none"></i>
+        <span class="d-none d-md-inline">Menu</span>
+    </a>
+</div>
+            <a href="#" class="header-btn" id="mobile-menu-toggle">
+                <i class="fas fa-bars d-md-none"></i>
+                <span class="d-none d-md-inline">Menu</span>
+            </a>
+            <a href="/admin/" class="header-btn" target="_blank">
+                <i class="fas fa-cog me-1"></i>
+                <span class="d-none d-md-inline">Admin</span>
+            </a>
+        </div>
+    </header>
+
+   <!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+    <div class="sidebar-menu">
+        <!-- Dashboard -->
+        <div class="menu-section">
+            <div class="menu-section-title">Tableau de Bord</div>
+            {% if user_profile.is_admin %}
+                <a href="#" class="menu-item active" onclick="loadContent('dashboard')" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard Admin
+                </a>
+            {% elif user_profile.is_rh %}
+                <a href="#" class="menu-item active" onclick="loadContent('dashboard')" data-section="dashboard">
+                    <i class="fas fa-chart-line"></i>
+                    Dashboard RH
+                </a>
+            {% else %}
+                <a href="#" class="menu-item active" onclick="loadContent('dashboard')" data-section="dashboard">
+                    <i class="fas fa-home"></i>
+                    Mon Espace
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Gestion des Utilisateurs (Admin + RH) -->
+        {% user_can user 'manage_users' as can_manage_users %}
+        {% if can_manage_users %}
+        <div class="menu-section">
+            <div class="menu-section-title">Gestion Utilisateurs</div>
+            <a href="#" class="menu-item" onclick="loadContent('config-users')" data-section="config-users">
+                <i class="fas fa-users-cog"></i>
+                Utilisateurs
+                {% if user_profile.is_admin %}
+                    <span class="menu-badge bg-danger">Admin</span>
+                {% endif %}
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Gestion RH (Admin + RH) -->
+        {% if user.profile.is_admin or user.profile.is_rh %}
+        <div class="menu-section">
+            <div class="menu-section-title">Gestion RH</div>
+            <a href="#" class="menu-item" onclick="loadContent('employees')" data-section="employees">
+                <i class="fas fa-users"></i>
+                Employés
+                <span class="menu-badge" id="employees-count">0</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('organigramme')" data-section="organigramme">
+                <i class="fas fa-sitemap"></i>
+                Organigramme
+            </a>
+        </div>
+        {% elif user_profile.is_employe %}
+        <!-- Section employé -->
+        <div class="menu-section">
+            <div class="menu-section-title">Mon Profil</div>
+            <a href="#" class="menu-item" onclick="loadContent('my-profile')" data-section="my-profile">
+                <i class="fas fa-user"></i>
+                Mes Informations
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Paie (Admin + RH peuvent tout voir, Employés voient leurs paies) -->
+        <div class="menu-section">
+            <div class="menu-section-title">
+                {% if user.profile.is_admin or user.profile.is_rh %}Gestion Paie{% else %}Mes Paies{% endif %}
+            </div>
+            
+            {% if user.profile.is_admin or user.profile.is_rh %}
+            <a href="#" class="menu-item" onclick="loadContent('payroll-calculation')" data-section="payroll-calculation">
+                <i class="fas fa-calculator"></i>
+                Calcul Paie
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('payroll-bulletins')" data-section="payroll-bulletins">
+                <i class="fas fa-file-invoice"></i>
+                Bulletins de Paie
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('payroll-statistics')" data-section="payroll-statistics">
+                <i class="fas fa-chart-line"></i>
+                Statistiques Paie
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('payroll-history')" data-section="payroll-history">
+                <i class="fas fa-history"></i>
+                Historique Paie
+            </a>
+            {% endif %}
+
+            {% if user.profile.is_admin %}
+            <a href="#" class="menu-item" onclick="loadContent('payroll-settings')" data-section="payroll-settings">
+                <i class="fas fa-cogs"></i>
+                Paramètres Paie
+            </a>
+            {% endif %}
+
+            {% if user_profile.is_employe %}
+            <a href="#" class="menu-item" onclick="loadContent('my-payroll')" data-section="my-payroll">
+                <i class="fas fa-file-invoice-dollar"></i>
+                Mes Bulletins
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Congés -->
+        <div class="menu-section">
+            <div class="menu-section-title">
+                {% if user.profile.is_admin or user.profile.is_rh %}Gestion Congés{% else %}Mes Congés{% endif %}
+            </div>
+            
+            {% if user.profile.is_admin or user.profile.is_rh %}
+            <a href="#" class="menu-item" onclick="loadContent('leave-requests')" data-section="leave-requests">
+                <i class="fas fa-calendar-check"></i>
+                Demandes de Congés
+                <span class="menu-badge" id="pending-leaves">0</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('leave-planning')" data-section="leave-planning">
+                <i class="fas fa-calendar-alt"></i>
+                Planification
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('leave-approvals')" data-section="leave-approvals">
+                <i class="fas fa-check-circle"></i>
+                Approbations
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('leave-calendar')" data-section="leave-calendar">
+                <i class="fas fa-calendar"></i>
+                Calendrier
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('leave-balances')" data-section="leave-balances">
+                <i class="fas fa-chart-bar"></i>
+                Soldes & Statistiques
+            </a>
+            {% endif %}
+
+            {% if user_profile.is_employe %}
+            <a href="#" class="menu-item" onclick="loadContent('my-leaves')" data-section="my-leaves">
+                <i class="fas fa-umbrella-beach"></i>
+                Mes Demandes
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('request-leave')" data-section="request-leave">
+                <i class="fas fa-plus-circle"></i>
+                Demander un Congé
+            </a>
+            {% endif %}
+
+            {% if user.profile.is_admin %}
+            <a href="#" class="menu-item" onclick="loadContent('leave-settings')" data-section="leave-settings">
+                <i class="fas fa-cogs"></i>
+                Paramètres Congés
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Pointage & Présence -->
+        {% if user.profile.is_admin or user.profile.is_rh or user_profile.is_employe %}
+        <div class="menu-section">
+            <div class="menu-section-title">
+                {% if user.profile.is_admin or user.profile.is_rh %}Pointage & Présence{% else %}Mon Pointage{% endif %}
+            </div>
+            
+            {% if user.profile.is_admin or user.profile.is_rh %}
+            <a href="#" class="menu-item" onclick="loadContent('attendance-timeclock')" data-section="attendance-timeclock">
+                <i class="fas fa-fingerprint text-primary"></i>
+                Interface Pointage
+                <span class="menu-badge" id="current-present-count" style="background: #28a745;">0</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('attendance-dashboard')" data-section="attendance-dashboard">
+                <i class="fas fa-tachometer-alt text-info"></i>
+                Dashboard Temps Réel
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('attendance-validation')" data-section="attendance-validation">
+                <i class="fas fa-check-circle text-warning"></i>
+                Validation Présences
+                <span class="menu-badge" id="pending-validations-count" style="background: #ffc107; display: none;">0</span>
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('attendance-reports')" data-section="attendance-reports">
+                <i class="fas fa-chart-line text-success"></i>
+                Rapports & Statistiques
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('attendance-schedules')" data-section="attendance-schedules">
+                <i class="fas fa-calendar-alt text-secondary"></i>
+                Horaires & Planning
+            </a>
+            {% endif %}
+
+            {% if user_profile.is_employe %}
+            <a href="#" class="menu-item" onclick="loadContent('my-timesheet')" data-section="my-timesheet">
+                <i class="fas fa-clock"></i>
+                Mon Pointage
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('my-presence')" data-section="my-presence">
+                <i class="fas fa-calendar-check"></i>
+                Mes Présences
+            </a>
+            {% endif %}
+
+            {% if user.profile.is_admin %}
+            <a href="#" class="menu-item" onclick="loadContent('attendance-settings')" data-section="attendance-settings">
+                <i class="fas fa-cogs text-muted"></i>
+                Configuration
+                <span class="menu-badge" id="attendance-alerts-count" style="background: #dc3545; display: none;">0</span>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Configuration (Admin seulement) -->
+        {% if user.profile.is_admin %}
+        <div class="menu-section">
+            <div class="menu-section-title">Configuration</div>
+            <a href="#" class="menu-item" onclick="loadContent('config-sites')" data-section="config-sites">
+                <i class="fas fa-building"></i>
+                Sites & Départements
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('config-settings')" data-section="config-settings">
+                <i class="fas fa-sliders-h"></i>
+                Paramètres
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Rapports (Admin + RH) -->
+        {% if user.profile.is_admin %}
+        <div class="menu-section">
+            <div class="menu-section-title">Analytics & Rapports</div>
+            <a href="#" class="menu-item" onclick="loadContent('reports-dashboard')" data-section="reports-dashboard">
+                <i class="fas fa-chart-line"></i>
+                Tableaux de Bord
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('reports-hr')" data-section="reports-hr">
+                <i class="fas fa-chart-pie"></i>
+                Analytics RH
+            </a>
+            <a href="#" class="menu-item" onclick="loadContent('reports-exports')" data-section="reports-exports">
+                <i class="fas fa-download"></i>
+                Exports
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-container">
+            <div class="content-area" id="main-content">
+                <!-- Le contenu sera chargé ici dynamiquement -->
+                <div class="loading-overlay">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Container for Toast Notifications -->
+    <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Configuration CSRF Django
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Initialize global csrftoken only once
+        window.csrftoken = window.csrftoken || getCookie('csrftoken');
+
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        // SPA Router
+        let currentSection = 'dashboard';
+
+        function showLoading() {
+            $('#main-content').html(`
+                <div class="loading-overlay">
+                    <div class="loading-spinner"></div>
+                </div>
+            `);
+        }
+
+        function hideLoading() {
+            $('.loading-overlay').remove();
+        }
+        // Affichage des alertes dynamiques
+        function showAlert(message, type) {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            $('.content-container').prepend(alertHtml);
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+
+        function updateActiveMenuItem(section) {
+            $('.menu-item').removeClass('active');
+            $(`.menu-item[data-section="${section}"]`).addClass('active');
+            currentSection = section;
+        }
+
+        function loadContent(section) {
+            showLoading();
+            updateActiveMenuItem(section);
+
+            // Routes mapping
+            const routes = {
+                'dashboard': '/spa/dashboard/',
+                'employees': '/spa/employees/list/',
+                'organigramme': '/spa/employees/organigramme/',
+                'payroll-calculation': '/spa/payroll/calculation/',
+                'payroll-bulletins': '/spa/payroll/bulletins/',
+                'payroll-statistics': '/spa/payroll/statistics/',
+                'payroll-history': '/spa/payroll/history/', // corrigé: ancienne valeur /spa/payroll/periodes/
+                'payroll-settings': '/spa/payroll/settings/', // corrigé: ancienne valeur /spa/payroll/parametrage/
+                'leave-requests': '/spa/leave/requests/',
+                'leave-planning': '/spa/leave/planning/',
+                'leave-approvals': '/spa/leave/approvals/',
+                'leave-calendar': '/spa/leave/calendar/',
+                'leave-balances': '/spa/leave/balances/',
+                'leave-settings': '/spa/leave/settings/',
+                // Nouvelles routes du module pointage
+                'attendance-timeclock': '/spa/attendance/timeclock/',
+                'attendance-dashboard': '/spa/attendance/dashboard/',
+                'attendance-validation': '/spa/attendance/validation/',
+                'attendance-reports': '/spa/attendance/reports/',
+                'attendance-schedules': '/spa/attendance/schedules/',
+                'attendance-settings': '/spa/attendance/settings/',
+                // Anciennes routes pour compatibilité
+                'attendance-live': '/spa/attendance/live/', // legacy mapping, no change
+                'attendance-history': '/spa/attendance/history/',
+                'attendance-absences': '/spa/attendance/absences/',
+                'config-sites': '/spa/config/sites/',
+                'config-users': '/spa/config/users/',
+                'config-settings': '/spa/config/settings/',
+                'reports-dashboard': '/spa/reports/dashboard/',
+                'reports-hr': '/spa/reports/hr/',
+                'reports-exports': '/spa/reports/hr/'
+            };
+
+            const url = routes[section] || '/spa/dashboard/';
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(data) {
+                    // Inject content
+                    $('#main-content').html(data).addClass('fade-in');
+                    // Execute only inline scripts (ignore external sources) in loaded content
+                    $('#main-content').find('script:not([src])').each(function() {
+                        var scriptText = this.text || this.textContent || this.innerHTML || '';
+                        if (scriptText) {
+                            $.globalEval(scriptText);
+                        }
+                    });
+                    updateCounts();
+                    initializeCurrentSection();
+                    hideLoading();
+                },
+                error: function(xhr, status, error) {
+                    $('#main-content').html(`
+                        <div class="p-5 text-center">
+                            <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+                            <h4>Section en développement</h4>
+                            <p class="text-muted">Cette fonctionnalité sera bientôt disponible.</p>
+                            <button class="btn btn-primary" onclick="loadContent('dashboard')">
+                                <i class="fas fa-home me-2"></i>Retour au Dashboard
+                            </button>
+                        </div>
+                    `);
+                    hideLoading();
+                }
+            });
+        }
+
+        function updateCounts() {
+            // Mise à jour des compteurs dans le menu
+            $.get('/api/stats/', function(data) {
+                $('#employees-count').text(data.total_employees || 0);
+                $('#pending-leaves').text(data.pending_leaves || 0);
+            }).fail(function() {
+                // Fallback silencieux
+            });
+            
+            // Mise à jour spécifique des compteurs pointage
+            updateAttendanceCounters();
+        }
+
+        // 🔧 FONCTIONS SPÉCIFIQUES AU MODULE POINTAGE
+
+        // Mise à jour des compteurs dans le menu pointage
+        function updateAttendanceCounters() {
+            $.get('/api/attendance/presence-status/')
+                .done(function(data) {
+                    if (data.success) {
+                        // Mettre à jour le compteur des présents
+                        const presentCount = $('#current-present-count');
+                        if (presentCount.length) {
+                            presentCount.text(data.statistiques.nb_presents || 0);
+                            presentCount.toggle((data.statistiques.nb_presents || 0) > 0);
+                        }
+                        
+                        // Mettre à jour les alertes
+                        updateAttendanceAlerts();
+                    }
+                })
+                .fail(function() {
+                    // Gestion silencieuse des erreurs
+                    console.log('Impossible de récupérer les statistiques de présence');
+                });
+        }
+
+        // Mise à jour des alertes pointage
+        function updateAttendanceAlerts() {
+            $.get('/api/attendance/alertes/?statut=NOUVELLE')
+                .done(function(data) {
+                    const alertsBadge = $('#attendance-alerts-count');
+                    const validationsBadge = $('#pending-validations-count');
+                    
+                    if (alertsBadge.length && data.alertes && data.alertes.length > 0) {
+                        alertsBadge.text(data.alertes.length);
+                        alertsBadge.show();
+                        
+                        // Animation pour attirer l'attention
+                        alertsBadge.addClass('animate__animated animate__pulse');
+                        setTimeout(() => {
+                            alertsBadge.removeClass('animate__animated animate__pulse');
+                        }, 1000);
+                    } else if (alertsBadge.length) {
+                        alertsBadge.hide();
+                    }
+                })
+                .fail(function() {
+                    // Gestion silencieuse des erreurs
+                    console.log('Impossible de récupérer les alertes');
+                });
+        }
+
+        // Vérification des nouvelles alertes
+        function checkNewAttendanceAlerts() {
+            $.get('/api/attendance/alertes/?nouveaux=true&limit=5')
+                .done(function(data) {
+                    if (data.alertes && data.alertes.length > 0) {
+                        data.alertes.forEach(alerte => {
+                            showAttendanceNotification(alerte);
+                        });
+                    }
+                })
+                .fail(function() {
+                    console.log('Impossible de vérifier les nouvelles alertes');
+                });
+        }
+
+        // Afficher une notification d'alerte pointage
+        function showAttendanceNotification(alerte) {
+            // Utiliser les notifications du navigateur si autorisées
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(`Alerte Pointage: ${alerte.titre}`, {
+                    body: alerte.message,
+                    icon: '/static/icons/attendance-alert.png',
+                    badge: '/static/icons/badge.png',
+                    tag: `attendance-${alerte.id}`,
+                    requireInteraction: alerte.niveau_gravite === 'CRITIQUE'
+                });
+            }
+            
+            // Notification toast en fallback
+            showAttendanceToast('warning', `Nouvelle alerte: ${alerte.titre}`, {
+                action: {
+                    text: 'Voir',
+                    callback: () => loadContent('attendance-validation')
+                }
+            });
+        }
+
+        // Fonction de notification toast améliorée pour le pointage
+        function showAttendanceToast(type, message, options = {}) {
+            const toastContainer = $('#toast-container').length ? $('#toast-container') : createToastContainer();
+            
+            const toastId = 'toast-' + Date.now();
+            const toast = $(`
+                <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        ${options.action ? `
+                            <button type="button" class="btn btn-sm btn-outline-light me-2" 
+                                    onclick="${options.action.callback.toString()}()">
+                                ${options.action.text}
+                            </button>
+                        ` : ''}
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                                data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `);
+            
+            toastContainer.append(toast);
+            
+            // Activer le toast Bootstrap
+            const bsToast = new bootstrap.Toast(toast[0]);
+            bsToast.show();
+            
+            // Nettoyer après fermeture
+            toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+
+        // Créer le conteneur des toasts s'il n'existe pas
+        function createToastContainer() {
+            const container = $(`
+                <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3" 
+                     style="z-index: 9999;"></div>
+            `);
+            $('body').append(container);
+            return container;
+        }
+
+        // Raccourcis clavier pour accès rapide au pointage
+        function setupAttendanceShortcuts() {
+            $(document).on('keydown', function(e) {
+                // Ctrl+Alt+P : Interface de pointage
+                if (e.ctrlKey && e.altKey && e.key === 'p') {
+                    e.preventDefault();
+                    loadContent('attendance-timeclock');
+                }
+                
+                // Ctrl+Alt+D : Dashboard pointage
+                if (e.ctrlKey && e.altKey && e.key === 'd') {
+                    e.preventDefault();
+                    loadContent('attendance-dashboard');
+                }
+                
+                // Ctrl+Alt+V : Validation
+                if (e.ctrlKey && e.altKey && e.key === 'v') {
+                    e.preventDefault();
+                    loadContent('attendance-validation');
+                }
+                
+                // Ctrl+Alt+R : Rapports
+                if (e.ctrlKey && e.altKey && e.key === 'r') {
+                    e.preventDefault();
+                    loadContent('attendance-reports');
+                }
+            });
+        }
+
+        // Demander la permission pour les notifications
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        showAttendanceToast('success', 'Notifications activées pour les alertes de pointage');
+                    }
+                });
+            }
+        }
+
+        function initializeCurrentSection() {
+            // Initialiser les fonctionnalités spécifiques à chaque section
+            if (typeof window.initSection === 'function') {
+                window.initSection(currentSection);
+            }
+        }
+
+        // Mobile menu toggle
+        $('#mobile-menu-toggle').click(function(e) {
+            e.preventDefault();
+            $('#sidebar').toggleClass('mobile-open');
+        });
+
+        // Close mobile menu when clicking outside
+        $(document).click(function(e) {
+            if (!$(e.target).closest('#sidebar, #mobile-menu-toggle').length) {
+                $('#sidebar').removeClass('mobile-open');
+            }
+        });
+
+        // Initialize app
+        $(document).ready(function() {
+            loadContent('dashboard');
+            updateCounts();
+            
+            // Initialiser le module pointage
+            initializeAttendanceModule();
+            
+            // Actualiser les compteurs toutes les 30 secondes
+            setInterval(updateCounts, 30000);
+            
+            // Vérifier les nouvelles alertes toutes les 2 minutes
+            setInterval(checkNewAttendanceAlerts, 120000);
+        });
+
+        // Fonction d'initialisation du module pointage
+        function initializeAttendanceModule() {
+            console.log('🔧 Module Pointage & Présence initialisé');
+            
+            // Vérifier que tous les éléments nécessaires sont présents
+            const requiredElements = [
+                'attendance-alerts-count',
+                'current-present-count', 
+                'pending-validations-count'
+            ];
+            
+            requiredElements.forEach(elementId => {
+                if (!$('#' + elementId).length) {
+                    console.warn(`⚠️ Élément manquant: ${elementId}`);
+                }
+            });
+            
+            // Configurer les raccourcis clavier
+            setupAttendanceShortcuts();
+            
+            // Demander permission notifications
+            requestNotificationPermission();
+            
+            // Charger les données initiales
+            updateAttendanceCounters();
+            
+            console.log('✅ Module Pointage & Présence prêt');
+        }
+
+        // Global notification system
+        function showNotification(message, type = 'success') {
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'error' ? 'alert-danger' : 
+                              type === 'warning' ? 'alert-warning' : 'alert-info';
+            
+            const notification = $(`
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                     style="top: 90px; right: 20px; z-index: 1060; min-width: 300px;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `);
+            
+            $('body').append(notification);
+            
+            setTimeout(() => {
+                notification.fadeOut(() => notification.remove());
+            }, 5000);
+        }
+
+        // Global AJAX error handler
+        $(document).ajaxError(function(event, xhr, settings) {
+            if (xhr.status === 403) {
+                showNotification('Accès non autorisé', 'error');
+            } else if (xhr.status === 500) {
+                showNotification('Erreur serveur', 'error');
+            }
+        });
+        
+        // Export (download) a single bulletin by ID
+        function exporterBulletin(id) {
+            // Redirect to the bulletin download route
+            window.location.href = '/bulletins/' + id + '/download/';
+        }
+    </script>
+    <script src="{% static 'js/permissions.js' %}"></script>
+<script>
+    // Exposer les permissions pour JavaScript
+    window.USER_PERMISSIONS = [];
+    window.USER_ROLE = '{{ user_profile.role }}';
+</script>
+</body>
+</html>
